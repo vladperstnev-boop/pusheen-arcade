@@ -709,6 +709,47 @@
       border: 2px solid transparent;
       cursor: pointer;
     }
+        .task-badge {
+      display: inline-block;
+      background: rgba(255, 212, 59, 0.16);
+      border: 1px solid rgba(255, 212, 59, 0.45);
+      color: var(--accent2);
+      font-size: 10.5px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-bottom: 4px;
+    }
+    .code-display {
+      font-family: "Courier New", monospace;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: #55efc4;
+      background: #08080e;
+      border-radius: 10px;
+      padding: 6px;
+      margin: 6px 0;
+    }
+    .keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .key-btn {
+      background: rgba(255, 255, 255, 0.09);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #fff;
+      border-radius: 10px;
+      padding: 9px 0;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .key-btn:active { transform: scale(0.94); background: var(--accent); color: #111; }
+    .key-btn.done { opacity: 0.3; pointer-events: none; }
+
     .wire-node.selected { border-color: #ffffff; transform: scale(1.05); box-shadow: 0 0 10px #ffffff; }
     .wire-node.done { opacity: 0.32; pointer-events: none; }
 
@@ -1909,39 +1950,107 @@
     }, 1700);
   }
   // === 3. ГОРЯЧАЯ БОМБА С ЗАДАНИЕМ «СОЕДИНИ ПРОВОДА» ===
-  function generateBombWires() {
+  // === 3. ГОРЯЧАЯ БОМБА С РАЗНЫМИ УСЛОЖНЯЮЩИМИСЯ ЗАДАНИЯМИ ===
+  function generateBombTask() {
     if (!bombState) return;
-    bombState.wiresDone = false;
-    bombState.selectedLeft = null;
-    bombState.matchedColors.clear();
+    bombState.taskDone = false;
+    bombState.passCount = (bombState.passCount || 0) + 1;
 
-    const wires = new Array(
-      { id: "red", name: "🔴 Красный", bg: "#ff6b81" },
-      { id: "gold", name: "🟡 Жёлтый", bg: "#ffd43b" },
-      { id: "mint", name: "🟢 Мятный", bg: "#55efc4" }
-    );
-    bombState.leftOrder = new Array(...wires).sort(() => Math.random() - 0.5);
-    bombState.rightOrder = new Array(...wires).sort(() => Math.random() - 0.5);
+    const level = Math.min(3, 1 + Math.floor((bombState.passCount - 1) / 2));
+    bombState.level = level;
+
+    const types = new Array("wires", "code", "math", "order");
+    let chosen = types.at(Math.floor(Math.random() * types.length));
+    if (chosen === bombState.lastTaskType) {
+      chosen = types.at((types.indexOf(chosen) + 1) % types.length);
+    }
+    bombState.lastTaskType = chosen;
+    bombState.taskType = chosen;
+
+    if (chosen === "wires") {
+      const count = 2 + level;
+      const allWires = new Array(
+        { id: "red", name: "🔴 Красный", bg: "#ff6b81" },
+        { id: "gold", name: "🟡 Жёлтый", bg: "#ffd43b" },
+        { id: "mint", name: "🟢 Мятный", bg: "#55efc4" },
+        { id: "blue", name: "🔵 Синий", bg: "#38bdf8" },
+        { id: "purp", name: "🟣 Фиолет", bg: "#c084fc" }
+      );
+      const subset = allWires.slice(0, count);
+      bombState.wireTargetCount = count;
+      bombState.selectedLeft = null;
+      bombState.matchedColors = new Set();
+      bombState.leftOrder = new Array(...subset).sort(() => Math.random() - 0.5);
+      bombState.rightOrder = new Array(...subset).sort(() => Math.random() - 0.5);
+    }
+
+    if (chosen === "code") {
+      const digitsLen = 2 + level;
+      let targetCode = "";
+      for (let i = 0; i < digitsLen; i++) {
+        targetCode += String(1 + Math.floor(Math.random() * 9));
+      }
+      bombState.targetCode = targetCode;
+      bombState.enteredCode = "";
+    }
+
+    if (chosen === "math") {
+      let a = 0, b = 0, ans = 0, expr = "";
+      if (level === 1) {
+        a = 4 + Math.floor(Math.random() * 12);
+        b = 3 + Math.floor(Math.random() * 11);
+        ans = a + b;
+        expr = `${a} + ${b} = ?`;
+      } else if (level === 2) {
+        a = 15 + Math.floor(Math.random() * 20);
+        b = 4 + Math.floor(Math.random() * 12);
+        ans = a - b;
+        expr = `${a} − ${b} = ?`;
+      } else {
+        a = 6 + Math.floor(Math.random() * 9);
+        b = 4 + Math.floor(Math.random() * 8);
+        const c = 2 + Math.floor(Math.random() * 10);
+        ans = a * b + c;
+        expr = `${a} × ${b} + ${c} = ?`;
+      }
+      const wrong1 = ans + (1 + Math.floor(Math.random() * 4));
+      const wrong2 = Math.max(1, ans - (1 + Math.floor(Math.random() * 4)));
+      const opts = new Array(ans, wrong1, wrong2).sort(() => Math.random() - 0.5);
+      bombState.mathExpr = expr;
+      bombState.mathAns = ans;
+      bombState.mathOpts = opts;
+    }
+
+    if (chosen === "order") {
+      const totalNums = 2 + level;
+      const nums = new Array();
+      for (let i = 1; i <= totalNums; i++) nums.push(i);
+      bombState.orderMax = totalNums;
+      bombState.orderNext = 1;
+      bombState.orderShuffled = nums.sort(() => Math.random() - 0.5);
+    }
   }
 
   function initHotBomb(playerIds, initiator) {
     bombState = {
       players: playerIds,
       holderId: playerIds.at(0),
-      timeLeft: 20 + Math.floor(Math.random() * 8),
+      timeLeft: 28 + Math.floor(Math.random() * 10),
       shieldUsed: false,
       freezeUsed: false,
       frozenUntil: 0,
       shieldedId: null,
-      wiresDone: false,
-      selectedLeft: null,
-      matchedColors: new Set()
+      taskDone: false,
+      passCount: 0,
+      level: 1,
+      lastTaskType: ""
     };
-    roundScoreEl.textContent = "Соедини провода!";
+    roundScoreEl.textContent = "Уровень 1";
 
     gameContainer.innerHTML = `
       <div class="bomb-arena-wrap" id="bombWrap">
-        <div class="bomb-core">💣</div>
+        <div class="task-badge" id="bombLevelBadge">Сложность: Уровень 1</div>
+        <div><span class="bomb-core">💣</span></div>
         <div id="bombHolderName" style="font-size:14px;font-weight:800;margin:4px 0;"></div>
         <div id="bombStatusSub" style="font-size:11px;color:#ffd43b;min-height:16px;"></div>
 
@@ -1955,26 +2064,37 @@
       </div>
     `;
 
-    if (bombState.holderId === myClientId) generateBombWires();
+    if (bombState.holderId === myClientId) generateBombTask();
 
     function passBombTo(targetId) {
       if (bombState.shieldedId === targetId) {
         bombState.shieldedId = null;
-        generateBombWires();
+        generateBombTask();
         playSFX("star");
-        sendData({ type: "bombStateSync", holderId: bombState.holderId, shieldedId: null, note: "🛡️ ЩИТ ОТРАЗИЛ БОМБУ!" });
+        sendData({
+          type: "bombStateSync",
+          holderId: bombState.holderId,
+          shieldedId: null,
+          passCount: bombState.passCount,
+          note: "🛡️ ЩИТ ОТРАЗИЛ БОМБУ!"
+        });
         const sub = document.getElementById("bombStatusSub");
-        if (sub) sub.textContent = "🛡️ У соперника сработал ЩИТ! Соединяй провода снова!";
+        if (sub) sub.textContent = "🛡️ Щит соперника отразил бомбу! Новое задание!";
         renderBombUI();
         return;
       }
       bombState.holderId = targetId;
-      bombState.wiresDone = false;
+      bombState.taskDone = false;
       playSFX("pop");
       renderBombUI();
-      sendData({ type: "bombStateSync", holderId: targetId, shieldedId: bombState.shieldedId, note: "" });
+      sendData({
+        type: "bombStateSync",
+        holderId: targetId,
+        shieldedId: bombState.shieldedId,
+        passCount: bombState.passCount,
+        note: ""
+      });
     }
-
     function renderBombUI() {
       const hP = roomPlayers.get(bombState.holderId);
       const iHold = bombState.holderId === myClientId;
@@ -1982,8 +2102,13 @@
       const wrap = document.getElementById("bombWrap");
       if (wrap) wrap.classList.toggle("danger", iHold);
 
+      const curLvl = Math.min(3, 1 + Math.floor(((bombState.passCount || 1) - 1) / 2));
+      const badge = document.getElementById("bombLevelBadge");
+      if (badge) badge.textContent = `Сложность: Уровень ${curLvl} • Передач: ${bombState.passCount || 0}`;
+      roundScoreEl.textContent = `Ур. ${curLvl}`;
+
       document.getElementById("bombHolderName").textContent = iHold
-        ? (isFrozen ? "❄️ ТЫ ЗАМОРОЖЕН НА 2 СЕК!" : (bombState.wiresDone ? "✅ ПРОВОДА СОЕДИНЕНЫ! КИДАЙ!" : "⚡ СОЕДИНИ ПРОВОДА, ЧТОБЫ ПЕРЕКИНУТЬ!"))
+        ? (isFrozen ? "❄️ ТЫ ЗАМОРОЖЕН НА 2 СЕК!" : (bombState.taskDone ? "✅ ЗАДАНИЕ ВЫПОЛНЕНО! КИДАЙ!" : "⚡ ВЫПОЛНИ ЗАДАНИЕ, ЧТОБЫ ПЕРЕКИНУТЬ!"))
         : `Бомба в руках: ${hP ? hP.nick : "..."}`;
 
       const sBtn = document.getElementById("skillShieldBtn");
@@ -1991,64 +2116,156 @@
       if (sBtn) sBtn.disabled = bombState.shieldUsed || iHold;
       if (fBtn) fBtn.disabled = bombState.freezeUsed || iHold;
 
-      const wireArea = document.getElementById("wirePuzzleArea");
+      const taskArea = document.getElementById("wirePuzzleArea");
       const box = document.getElementById("bombTargets");
-      wireArea.innerHTML = "";
+      taskArea.innerHTML = "";
       box.innerHTML = "";
 
-      if (iHold && !isFrozen && !bombState.wiresDone) {
-        if (!bombState.leftOrder) generateBombWires();
-        let leftHtml = "";
-        bombState.leftOrder.forEach(w => {
-          const done = bombState.matchedColors.has(w.id) ? " done" : "";
-          const sel = bombState.selectedLeft === w.id ? " selected" : "";
-          leftHtml += `<button class="wire-node${done}${sel}" data-side="L" data-w="${w.id}" style="background:${w.bg};">${w.name}</button>`;
-        });
+      if (iHold && !isFrozen && !bombState.taskDone) {
+        if (!bombState.taskType) generateBombTask();
 
-        let rightHtml = "";
-        bombState.rightOrder.forEach(w => {
-          const done = bombState.matchedColors.has(w.id) ? " done" : "";
-          rightHtml += `<button class="wire-node${done}" data-side="R" data-w="${w.id}" style="background:${w.bg};">${w.name}</button>`;
-        });
+        if (bombState.taskType === "wires") {
+          let leftHtml = "";
+          bombState.leftOrder.forEach(w => {
+            const done = bombState.matchedColors.has(w.id) ? " done" : "";
+            const sel = bombState.selectedLeft === w.id ? " selected" : "";
+            leftHtml += `<button class="wire-node${done}${sel}" data-side="L" data-w="${w.id}" style="background:${w.bg};">${w.name}</button>`;
+          });
+          let rightHtml = "";
+          bombState.rightOrder.forEach(w => {
+            const done = bombState.matchedColors.has(w.id) ? " done" : "";
+            rightHtml += `<button class="wire-node${done}" data-side="R" data-w="${w.id}" style="background:${w.bg};">${w.name}</button>`;
+          });
 
-        wireArea.innerHTML = `
-          <div class="wire-box">
-            <div style="font-size:10.5px;color:#8f9bb3;">Нажми цвет слева → затем такой же справа</div>
-            <div class="wire-grid">
-              <div class="wire-col">${leftHtml}</div>
-              <div class="wire-col">${rightHtml}</div>
+          taskArea.innerHTML = `
+            <div class="wire-box">
+              <div style="font-size:10.5px;color:#8f9bb3;">Соедини все ${bombState.wireTargetCount} провода по цветам</div>
+              <div class="wire-grid">
+                <div class="wire-col">${leftHtml}</div>
+                <div class="wire-col">${rightHtml}</div>
+              </div>
             </div>
-          </div>
-        `;
+          `;
 
-        wireArea.querySelectorAll(".wire-node").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const side = btn.getAttribute("data-side");
-            const wId = btn.getAttribute("data-w");
-            if (side === "L") {
-              bombState.selectedLeft = wId;
-              playSFX("pop");
-              renderBombUI();
-            } else if (side === "R" && bombState.selectedLeft) {
-              if (bombState.selectedLeft === wId) {
-                bombState.matchedColors.add(wId);
-                bombState.selectedLeft = null;
-                playSFX("eat");
-                if (bombState.matchedColors.size >= 3) {
-                  bombState.wiresDone = true;
+          taskArea.querySelectorAll(".wire-node").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const side = btn.getAttribute("data-side");
+              const wId = btn.getAttribute("data-w");
+              if (side === "L") {
+                bombState.selectedLeft = wId;
+                playSFX("pop");
+                renderBombUI();
+              } else if (side === "R" && bombState.selectedLeft) {
+                if (bombState.selectedLeft === wId) {
+                  bombState.matchedColors.add(wId);
+                  bombState.selectedLeft = null;
+                  playSFX("eat");
+                  if (bombState.matchedColors.size >= bombState.wireTargetCount) {
+                    bombState.taskDone = true;
+                    playSFX("star");
+                  }
+                } else {
+                  bombState.selectedLeft = null;
+                  playSFX("chili");
+                }
+                renderBombUI();
+              }
+            });
+          });
+        }
+
+        if (bombState.taskType === "code") {
+          let keysHtml = "";
+          for (let d = 1; d <= 9; d++) {
+            keysHtml += `<button class="key-btn" data-digit="${d}">${d}</button>`;
+          }
+          taskArea.innerHTML = `
+            <div class="wire-box">
+              <div style="font-size:10.5px;color:#8f9bb3;">Набери код: <b style="color:#ffd43b;font-size:14px;">${bombState.targetCode}</b></div>
+              <div class="code-display">${bombState.enteredCode || "___"}</div>
+              <div class="keypad-grid">${keysHtml}</div>
+            </div>
+          `;
+          taskArea.querySelectorAll(".key-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const d = btn.getAttribute("data-digit");
+              const nextStr = bombState.enteredCode + d;
+              if (bombState.targetCode.startsWith(nextStr)) {
+                bombState.enteredCode = nextStr;
+                playSFX("pop");
+                if (bombState.enteredCode === bombState.targetCode) {
+                  bombState.taskDone = true;
                   playSFX("star");
                 }
               } else {
-                bombState.selectedLeft = null;
+                bombState.enteredCode = "";
                 playSFX("chili");
               }
               renderBombUI();
-            }
+            });
           });
-        });
+        }
+
+        if (bombState.taskType === "math") {
+          let optsHtml = "";
+          bombState.mathOpts.forEach(val => {
+            optsHtml += `<button class="key-btn" data-ans="${val}">${val}</button>`;
+          });
+          taskArea.innerHTML = `
+            <div class="wire-box">
+              <div style="font-size:10.5px;color:#8f9bb3;">Реши пример для разблокировки:</div>
+              <div class="code-display" style="color:#ff70b8;">${bombState.mathExpr}</div>
+              <div class="keypad-grid">${optsHtml}</div>
+            </div>
+          `;
+          taskArea.querySelectorAll(".key-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const picked = Number(btn.getAttribute("data-ans"));
+              if (picked === bombState.mathAns) {
+                bombState.taskDone = true;
+                playSFX("star");
+              } else {
+                playSFX("chili");
+                generateBombTask();
+              }
+              renderBombUI();
+            });
+          });
+        }
+
+        if (bombState.taskType === "order") {
+          let numsHtml = "";
+          bombState.orderShuffled.forEach(num => {
+            const done = num < bombState.orderNext ? " done" : "";
+            numsHtml += `<button class="key-btn${done}" data-num="${num}">${num}</button>`;
+          });
+          taskArea.innerHTML = `
+            <div class="wire-box">
+              <div style="font-size:10.5px;color:#8f9bb3;">Нажимай числа по порядку: <b>1 → ${bombState.orderMax}</b></div>
+              <div class="keypad-grid">${numsHtml}</div>
+            </div>
+          `;
+          taskArea.querySelectorAll(".key-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+              const n = Number(btn.getAttribute("data-num"));
+              if (n === bombState.orderNext) {
+                bombState.orderNext++;
+                playSFX("pop");
+                if (bombState.orderNext > bombState.orderMax) {
+                  bombState.taskDone = true;
+                  playSFX("star");
+                }
+              } else {
+                bombState.orderNext = 1;
+                playSFX("chili");
+              }
+              renderBombUI();
+            });
+          });
+        }
       }
 
-      if (iHold && !isFrozen && bombState.wiresDone) {
+      if (iHold && !isFrozen && bombState.taskDone) {
         bombState.players.forEach(pid => {
           if (pid === myClientId) return;
           const tp = roomPlayers.get(pid);
@@ -2069,7 +2286,7 @@
       playSFX("star");
       document.getElementById("bombStatusSub").textContent = "🛡️ Щит активирован!";
       renderBombUI();
-      sendData({ type: "bombStateSync", holderId: bombState.holderId, shieldedId: myClientId, note: `🛡️ ${myNick} включил Щит!` });
+      sendData({ type: "bombStateSync", holderId: bombState.holderId, shieldedId: myClientId, passCount: bombState.passCount, note: `🛡️ ${myNick} включил Щит!` });
     });
 
     document.getElementById("skillFreezeBtn").addEventListener("click", () => {
@@ -2153,6 +2370,7 @@
     });
     roundScoreEl.textContent = parts.join(" ");
   }
+
   // === 5–7. ДУЭЛЬНЫЕ ИГРЫ (ПИНГ-ПОНГ, АЭРОХОККЕЙ, КРЕСТИКИ-НОЛИКИ) ===
   function initPong(playerIds) {
     const p1 = playerIds.at(0), p2 = playerIds.at(1);
@@ -2284,7 +2502,8 @@
     if (msg.type === "bombStateSync" && bombState) {
       bombState.holderId = msg.holderId;
       bombState.shieldedId = msg.shieldedId || null;
-      if (msg.holderId === myClientId && !bombState.wiresDone) generateBombWires();
+      if (typeof msg.passCount === "number") bombState.passCount = msg.passCount;
+      if (msg.holderId === myClientId && !bombState.taskDone) generateBombTask();
       const sub = document.getElementById("bombStatusSub");
       if (sub && msg.note) sub.textContent = msg.note;
       playSFX("pop");
