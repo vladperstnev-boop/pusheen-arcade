@@ -605,38 +605,88 @@
     .track-bar { height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 6px; margin-top: 4px; overflow: hidden; }
     .track-fill { height: 100%; background: var(--grad-main); width: 0%; transition: width 0.35s ease; }
 
-    .bomb-holder {
-      font-size: 54px;
-      margin: 10px 0;
-      animation: pulseBomb 0.6s infinite alternate;
+    /* === 3D-КУБИК СО ВСЕМИ 6 ГРАНЯМИ === */
+    .dice-scene {
+      width: 68px;
+      height: 68px;
+      margin: 8px auto 14px;
+      perspective: 400px;
     }
-    @keyframes pulseBomb {
-      from { transform: scale(0.94); }
-      to   { transform: scale(1.08); }
+    .dice-cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.85s cubic-bezier(0.2, 0.9, 0.3, 1.15);
     }
-
-    .ttt-grid {
+    .dice-face {
+      position: absolute;
+      width: 68px;
+      height: 68px;
+      background: linear-gradient(145deg, #1e1e2e, #12121c);
+      border: 2px solid var(--accent);
+      border-radius: 14px;
+      box-shadow: inset 0 0 12px var(--accent-soft);
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      max-width: 280px;
-      margin: 12px auto;
-    }
-    .ttt-cell {
-      aspect-ratio: 1 / 1;
-      background: #0b0b12;
-      border: 1.5px solid rgba(255, 255, 255, 0.12);
-      border-radius: 16px;
-      display: flex;
+      grid-template-rows: repeat(3, 1fr);
+      padding: 8px;
       align-items: center;
-      justify-content: center;
-      font-size: 36px;
-      font-weight: 800;
+      justify-items: center;
+    }
+    .pip {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--accent2);
+      box-shadow: 0 0 6px var(--accent2);
+    }
+    .f-1 { transform: rotateY(0deg) translateZ(34px); }
+    .f-6 { transform: rotateY(180deg) translateZ(34px); }
+    .f-3 { transform: rotateY(90deg) translateZ(34px); }
+    .f-4 { transform: rotateY(-90deg) translateZ(34px); }
+    .f-2 { transform: rotateX(90deg) translateZ(34px); }
+    .f-5 { transform: rotateX(-90deg) translateZ(34px); }
+
+    /* === УЛУЧШЕННАЯ ГОРЯЧАЯ БОМБА === */
+    .bomb-arena-wrap {
+      background: #0b0b12;
+      border: 1.5px solid var(--accent-border);
+      border-radius: 18px;
+      padding: 12px 10px;
+      transition: box-shadow 0.25s;
+    }
+    .bomb-arena-wrap.danger {
+      border-color: #ff4757;
+      box-shadow: 0 0 22px rgba(255, 71, 87, 0.35);
+    }
+    .bomb-core {
+      font-size: 52px;
+      display: inline-block;
+      margin: 4px 0;
+      animation: bombShake 0.35s infinite alternate;
+    }
+    @keyframes bombShake {
+      from { transform: rotate(-7deg) scale(0.95); }
+      to   { transform: rotate(7deg) scale(1.08); }
+    }
+    .bomb-skills {
+      display: flex;
+      gap: 6px;
+      margin: 10px 0 8px;
+    }
+    .skill-btn {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #fff;
+      border-radius: 11px;
+      padding: 7px 4px;
+      font-size: 11px;
+      font-weight: 700;
       cursor: pointer;
     }
-    .ttt-cell.x { color: #ff70b8; }
-    .ttt-cell.o { color: #ffd43b; }
-    .ttt-cell.win-cell { border-color: #55efc4; background: rgba(85, 239, 196, 0.18); }
+    .skill-btn:disabled { opacity: 0.35; cursor: default; }
   </style>
 </head>
 <body>
@@ -1676,15 +1726,53 @@
     loop();
   }
   // === 2. ГОНКА КУБИКОВ (2–4 ИГРОКА) ===
+  // === 2. ГОНКА КУБИКОВ С 3D-АНИМАЦИЕЙ ВСЕХ 6 ГРАНЕЙ ===
+  function buildDiceHtml() {
+    function pips(positions) {
+      let html = "";
+      for (let cell = 1; cell <= 9; cell++) {
+        html += positions.includes(cell) ? `<span class="pip"></span>` : `<span></span>`;
+      }
+      return html;
+    }
+    return `
+      <div class="dice-scene">
+        <div class="dice-cube" id="diceCube">
+          <div class="dice-face f-1">${pips(new Array(5))}</div>
+          <div class="dice-face f-2">${pips(new Array(1, 9))}</div>
+          <div class="dice-face f-3">${pips(new Array(1, 5, 9))}</div>
+          <div class="dice-face f-4">${pips(new Array(1, 3, 7, 9))}</div>
+          <div class="dice-face f-5">${pips(new Array(1, 3, 5, 7, 9))}</div>
+          <div class="dice-face f-6">${pips(new Array(1, 3, 4, 6, 7, 9))}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function animateDiceCube(faceVal) {
+    const cube = document.getElementById("diceCube");
+    if (!cube) return;
+    // Углы поворота для каждой из 6 граней + 2 полных оборота для красивого броска
+    let rx = 720, ry = 720;
+    if (faceVal === 2) { rx = 630; ry = 720; }
+    if (faceVal === 3) { rx = 720; ry = 630; }
+    if (faceVal === 4) { rx = 720; ry = 810; }
+    if (faceVal === 5) { rx = 810; ry = 720; }
+    if (faceVal === 6) { rx = 720; ry = 900; }
+    cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+  }
+
   function initDiceRace(playerIds) {
     const pos = new Map();
     playerIds.forEach(id => pos.set(id, 0));
-    diceState = { order: playerIds, turnIdx: 0, pos };
+    diceState = { order: playerIds, turnIdx: 0, pos, busy: false };
     roundScoreEl.textContent = "Цель: 25";
 
     gameContainer.innerHTML = `
       <div class="party-box">
-        <div id="diceTurnText" style="font-size:13px;font-weight:700;margin-bottom:8px;"></div>
+        <div id="diceTurnText" style="font-size:13px;font-weight:700;margin-bottom:4px;"></div>
+        <div id="diceEventText" style="font-size:11px;color:var(--accent2);min-height:16px;">Клетки: 6, 12, 18 (+2) • 9, 15, 21 (-2)</div>
+        ${buildDiceHtml()}
         <div class="dice-track" id="diceTrack"></div>
         <button class="btn" id="rollDiceBtn">🎲 Бросить кубик</button>
       </div>
@@ -1712,8 +1800,8 @@
 
       const curId = diceState.order.at(diceState.turnIdx % diceState.order.length);
       const curP = roomPlayers.get(curId);
-      const isMyTurn = curId === myClientId;
-      document.getElementById("diceTurnText").textContent = isMyTurn
+      const isMyTurn = curId === myClientId && !diceState.busy;
+      document.getElementById("diceTurnText").textContent = curId === myClientId
         ? "Твой ход! Жми кубик 🎲"
         : `Ходит ${curP ? curP.nick : "игрок"}...`;
       document.getElementById("rollDiceBtn").disabled = !isMyTurn;
@@ -1725,7 +1813,7 @@
 
     document.getElementById("rollDiceBtn").addEventListener("click", () => {
       const curId = diceState.order.at(diceState.turnIdx % diceState.order.length);
-      if (curId !== myClientId) return;
+      if (curId !== myClientId || diceState.busy) return;
       const roll = 1 + Math.floor(Math.random() * 6);
       applyDiceMove(myClientId, roll);
       sendData({ type: "diceRoll", pid: myClientId, roll });
@@ -1734,61 +1822,156 @@
 
   function applyDiceMove(pid, roll) {
     if (!diceState) return;
-    playSFX("pop");
-    const nextVal = (diceState.pos.get(pid) || 0) + roll;
-    diceState.pos.set(pid, nextVal);
-    diceState.turnIdx++;
-    gameHintEl.textContent = `Выпало: ${roll}!`;
+    diceState.busy = true;
     if (diceState.render) diceState.render();
 
-    if (nextVal >= 25) {
-      const wp = roomPlayers.get(pid);
-      finishPartyRound(pid, `${wp ? wp.nick : "Игрок"} финишировал первым! 🏆`);
-    }
+    playSFX("pop");
+    animateDiceCube(roll);
+    gameHintEl.textContent = `Бросок: ${roll}...`;
+
+    setTimeout(() => {
+      if (!diceState || currentGame !== "dice") return;
+      let nextVal = (diceState.pos.get(pid) || 0) + roll;
+      let eventMsg = `Выпало ${roll}!`;
+
+      // Бонусные и штрафные клетки на поле
+      if (nextVal === 6 || nextVal === 12 || nextVal === 18) {
+        nextVal += 2;
+        eventMsg = `Выпало ${roll} + Буст ⭐ (+2 клетки)!`;
+        playSFX("star");
+      } else if (nextVal === 9 || nextVal === 15 || nextVal === 21) {
+        nextVal = Math.max(0, nextVal - 2);
+        eventMsg = `Выпало ${roll} и ловушка 🌶️ (-2 клетки)!`;
+        playSFX("chili");
+      } else {
+        playSFX("eat");
+      }
+
+      const evEl = document.getElementById("diceEventText");
+      if (evEl) evEl.textContent = eventMsg;
+
+      diceState.pos.set(pid, nextVal);
+      diceState.turnIdx++;
+      diceState.busy = false;
+      if (diceState.render) diceState.render();
+
+      if (nextVal >= 25) {
+        const wp = roomPlayers.get(pid);
+        finishPartyRound(pid, `${wp ? wp.nick : "Игрок"} финишировал первым! 🏆`);
+      }
+    }, 900);
   }
   // === 3. ГОРЯЧАЯ БОМБА (2–4 ИГРОКА) ===
+  // === 3. ГОРЯЧАЯ БОМБА СО СПОСОБНОСТЯМИ И НАПРЯЖЕНИЕМ (2–4 ИГРОКА) ===
   function initHotBomb(playerIds, initiator) {
     bombState = {
       players: playerIds,
       holderId: playerIds.at(0),
-      timeLeft: 14 + Math.floor(Math.random() * 8)
+      prevHolderId: playerIds.at(playerIds.length - 1),
+      timeLeft: 16 + Math.floor(Math.random() * 8),
+      shieldUsed: false,
+      freezeUsed: false,
+      reverseUsed: false,
+      frozenUntil: 0,
+      shieldedId: null
     };
-    roundScoreEl.textContent = "Не взорвись!";
+    roundScoreEl.textContent = "Выживание";
 
     gameContainer.innerHTML = `
-      <div class="party-box">
-        <div class="bomb-holder">💣</div>
-        <div id="bombHolderName" style="font-size:15px;font-weight:800;margin-bottom:12px;"></div>
+      <div class="bomb-arena-wrap" id="bombWrap">
+        <div class="bomb-core" id="bombCore">💣</div>
+        <div id="bombHolderName" style="font-size:14.5px;font-weight:800;margin:4px 0;"></div>
+        <div id="bombStatusSub" style="font-size:11px;color:#ffd43b;min-height:16px;"></div>
+
+        <div class="bomb-skills">
+          <button class="skill-btn" id="skillShieldBtn">🛡️ Щит (1)</button>
+          <button class="skill-btn" id="skillFreezeBtn">❄️ Заморозка (1)</button>
+          <button class="skill-btn" id="skillReverseBtn">🔄 Обратка (1)</button>
+        </div>
+
         <div id="bombTargets" style="display:flex;flex-direction:column;gap:7px;"></div>
       </div>
     `;
 
+    function passBombTo(targetId, actionNote) {
+      if (bombState.shieldedId === targetId) {
+        // Щит отразил бомбу обратно!
+        bombState.shieldedId = null;
+        playSFX("star");
+        sendData({ type: "bombStateSync", holderId: bombState.holderId, shieldedId: null, note: "🛡️ ЩИТ ОТРАЗИЛ БОМБУ!" });
+        const sub = document.getElementById("bombStatusSub");
+        if (sub) sub.textContent = "🛡️ У соперника сработал ЩИТ! Бомба вернулась!";
+        renderBombUI();
+        return;
+      }
+      bombState.prevHolderId = bombState.holderId;
+      bombState.holderId = targetId;
+      playSFX("pop");
+      renderBombUI();
+      sendData({ type: "bombStateSync", holderId: targetId, prevHolderId: bombState.prevHolderId, shieldedId: bombState.shieldedId, note: actionNote || "" });
+    }
+
     function renderBombUI() {
       const hP = roomPlayers.get(bombState.holderId);
       const iHold = bombState.holderId === myClientId;
+      const isFrozen = Date.now() < bombState.frozenUntil;
+      const wrap = document.getElementById("bombWrap");
+      if (wrap) wrap.classList.toggle("danger", iHold);
+
       document.getElementById("bombHolderName").textContent = iHold
-        ? "🔥 БОМБА У ТЕБЯ! СРОЧНО ПЕРЕКИНЬ!"
-        : `Бомба у игрока: ${hP ? hP.nick : "..."}`;
+        ? (isFrozen ? "❄️ ТЫ ЗАМОРОЖЕН НА 2 СЕК!" : "🔥 БОМБА У ТЕБЯ! ПЕРЕКИНЬ ЕЁ!")
+        : `Бомба в руках: ${hP ? hP.nick : "..."}`;
+
+      // Настройка кнопок способностей
+      const sBtn = document.getElementById("skillShieldBtn");
+      const fBtn = document.getElementById("skillFreezeBtn");
+      const rBtn = document.getElementById("skillReverseBtn");
+      if (sBtn) sBtn.disabled = bombState.shieldUsed || iHold;
+      if (fBtn) fBtn.disabled = bombState.freezeUsed || iHold;
+      if (rBtn) rBtn.disabled = bombState.reverseUsed || !iHold || isFrozen;
 
       const box = document.getElementById("bombTargets");
       box.innerHTML = "";
-      if (iHold) {
+      if (iHold && !isFrozen) {
         bombState.players.forEach(pid => {
           if (pid === myClientId) return;
           const tp = roomPlayers.get(pid);
+          const hasShield = bombState.shieldedId === pid;
           const b = document.createElement("button");
           b.className = "btn";
-          b.textContent = `👉 Кинуть игроку ${tp ? tp.nick : "Соперник"}`;
-          b.addEventListener("click", () => {
-            bombState.holderId = pid;
-            playSFX("pop");
-            renderBombUI();
-            sendData({ type: "bombPass", toId: pid });
-          });
+          b.textContent = `👉 Кинуть ${tp ? tp.nick : "Сопернику"}${hasShield ? " (🛡️)" : ""}`;
+          b.addEventListener("click", () => passBombTo(pid, ""));
           box.appendChild(b);
         });
       }
     }
+
+    // Привязка способностей
+    document.getElementById("skillShieldBtn").addEventListener("click", () => {
+      if (bombState.shieldUsed) return;
+      bombState.shieldUsed = true;
+      bombState.shieldedId = myClientId;
+      playSFX("star");
+      document.getElementById("bombStatusSub").textContent = "🛡️ Ты активировал Щит на следующий бросок!";
+      renderBombUI();
+      sendData({ type: "bombStateSync", holderId: bombState.holderId, shieldedId: myClientId, note: `🛡️ ${myNick} включил Щит!` });
+    });
+
+    document.getElementById("skillFreezeBtn").addEventListener("click", () => {
+      if (bombState.freezeUsed) return;
+      bombState.freezeUsed = true;
+      playSFX("chili");
+      document.getElementById("bombStatusSub").textContent = "❄️ Держатель бомбы заморожен на 2.2 сек!";
+      renderBombUI();
+      sendData({ type: "bombFreeze", targetId: bombState.holderId, byNick: myNick });
+    });
+
+    document.getElementById("skillReverseBtn").addEventListener("click", () => {
+      if (bombState.reverseUsed || bombState.holderId !== myClientId) return;
+      bombState.reverseUsed = true;
+      const backTo = bombState.prevHolderId || bombState.players.find(id => id !== myClientId);
+      passBombTo(backTo, `🔄 ${myNick} вернул бомбу обратно!`);
+    });
 
     bombState.render = renderBombUI;
     renderBombUI();
@@ -1797,7 +1980,9 @@
       const timer = setInterval(() => {
         if (currentGame !== "bomb") { clearInterval(timer); return; }
         bombState.timeLeft--;
-        playSFX("hit");
+        // Ускорение звука тиканья, когда остаётся мало времени
+        playTone(bombState.timeLeft <= 5 ? 880 : 440, "triangle", 0.06, 0.12);
+
         if (bombState.timeLeft <= 0) {
           clearInterval(timer);
           const survivor = bombState.players.find(id => id !== bombState.holderId) || null;
@@ -1986,9 +2171,23 @@
 
     if (msg.type === "diceRoll" && diceState) applyDiceMove(msg.pid, msg.roll);
 
-    if (msg.type === "bombPass" && bombState) {
-      bombState.holderId = msg.toId;
+    if (msg.type === "bombStateSync" && bombState) {
+      bombState.holderId = msg.holderId;
+      if (msg.prevHolderId) bombState.prevHolderId = msg.prevHolderId;
+      bombState.shieldedId = msg.shieldedId || null;
+      const sub = document.getElementById("bombStatusSub");
+      if (sub && msg.note) sub.textContent = msg.note;
       playSFX("pop");
+      if (bombState.render) bombState.render();
+    }
+    if (msg.type === "bombFreeze" && bombState) {
+      if (msg.targetId === myClientId) {
+        bombState.frozenUntil = Date.now() + 2200;
+        playSFX("chili");
+        setTimeout(() => { if (bombState && bombState.render) bombState.render(); }, 2250);
+      }
+      const sub = document.getElementById("bombStatusSub");
+      if (sub) sub.textContent = `❄️ ${msg.byNick} заморозил держателя бомбы!`;
       if (bombState.render) bombState.render();
     }
     if (msg.type === "bombBoom" && bombState) {
