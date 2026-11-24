@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Pusheen & Arcade Duo — Игры вдвоём</title>
-  <script src="https://unpkg.com"></script>
+  <script src="https://cloudflare.com"></script>
   <style>
     :root {
       --bg-glow: #251736;
@@ -821,106 +821,115 @@
     document.getElementById(id).classList.add("active");
   }
 
-  // === НАДЁЖНЫЕ P2P-КОМНАТЫ И ЧАТ ===
-  let peer = null;
-  let conn = null;
+  // === МГНОВЕННЫЕ КОМНАТЫ ЧЕРЕЗ WEBSOCKETS (MQTT) ===
+  let client = null;
+  let isConnected = false;
   let isHost = false;
   let roomCode = "";
+  let roomTopic = "";
+  const myClientId = "u_" + Math.random().toString(36).slice(2, 9);
+
   let enemyNick = "Соперник";
   let enemyAva = "🦊";
   let winsMe = 0;
   let winsEnemy = 0;
   let currentGame = null;
   let gameLoopId = null;
-  let connectWatchdog = null;
 
   const statusText = document.getElementById("statusText");
 
-  const peerConfig = {
-    debug: 0,
-    config: {
-      iceServers: [
-        { urls: "stun:://google.com" },
-        { urls: "stun:://google.com" },
-        { urls: "stun:://google.com" }
-      ]
-    }
-  };
-
   function updateHeader() {
     document.getElementById("p1Badge").innerHTML = `${renderAvatarHtml(myAva)} <span>${myNick}</span>`;
-    document.getElementById("p2Badge").innerHTML = conn && conn.open
+    document.getElementById("p2Badge").innerHTML = isConnected
       ? `<span>${enemyNick}</span> ${renderAvatarHtml(enemyAva)}`
       : `<span>Ожидание... ⏳</span>`;
     document.getElementById("globalScore").textContent = `${winsMe} : ${winsEnemy}`;
   }
 
   function sendData(payload) {
-    if (conn && conn.open) conn.send(payload);
+    if (client && client.connected && roomTopic) {
+      payload._sender = myClientId;
+      client.publish(roomTopic, JSON.stringify(payload));
+    }
   }
 
-  function setupConnection(connection) {
-    conn = connection;
-    conn.on("open", () => {
-      if (connectWatchdog) clearTimeout(connectWatchdog);
-      statusText.textContent = "Соединение установлено!";
-      sendData({ type: "hello", nick: myNick, ava: myAva });
-      updateHeader();
-      showScreen("screenLobby");
+  function connectToRoomBroker(code, hostMode) {
+    if (typeof mqtt === "undefined") {
+      statusText.textContent = "Не загрузился скрипт связи. Обновите страницу или отключите блокировщик рекламы.";
+      return;
+    }
+
+    if (client) {
+      try { client.end(true); } catch (e) {}
+    }
+
+    isHost = hostMode;
+    roomCode = code;
+    roomTopic = "pusheen_arcade_room_2026/" + code;
+    isConnected = false;
+
+    statusText.textContent = hostMode ? "Открываем комнату..." : "Входим в комнату " + code + "...";
+
+    client = mqtt.connect("wss://broker.emqx.io:8084/mqtt", {
+      clientId: myClientId,
+      clean: true,
+      connectTimeout: 6000
     });
 
-    conn.on("data", handleNetworkMessage);
-    conn.on("close", () => {
-      alert("Второй игрок вышел из комнаты.");
-      location.reload();
+    client.on("connect", () => {
+      client.subscribe(roomTopic, (err) => {
+        if (err) {
+          statusText.textContent = "Ошибка подписки на комнату.";
+          return;
+        }
+        document.getElementById("displayCode").textContent = roomCode;
+        statusText.textContent = "";
+        updateHeader();
+        showScreen("screenLobby");
+
+        // Если мы зашли в чужую комнату — сразу стучимся к создателю
+        if (!isHost) {
+          sendData({ type: "join_req", nick: myNick, ava: myAva });
+        }
+      });
+    });
+
+    client.on("message", (topic, message) => {
+      try {
+        const msg = JSON.parse(message.toString());
+        // Игнорируем свои же эхо-сообщения
+        if (msg._sender === myClientId) return;
+
+        if (msg.type === "join_req" && isHost) {
+          isConnected = true;
+          enemyNick = msg.nick;
+          enemyAva = msg.ava;
+          updateHeader();
+          sendData({ type: "hello", nick: myNick, ava: myAva });
+          return;
+        }
+
+        if (msg.type === "hello") {
+          isConnected = true;
+          enemyNick = msg.nick;
+          enemyAva = msg.ava;
+          updateHeader();
+          return;
+        }
+
+        handleNetworkMessage(msg);
+      } catch (e) {}
+    });
+
+    client.on("error", () => {
+      statusText.textContent = "Ошибка сети. Проверьте интернет и попробуйте снова.";
     });
   }
 
   document.getElementById("createRoomBtn").addEventListener("click", () => {
     saveAccount();
-    if (peer) { try { peer.destroy(); } catch (e) {} }
-
-    isHost = true;
-    roomCode = Math.floor(1000 + Math.random() * 9000).toString();
-    statusText.textContent = "Подключаем сервер комнаты...";
-
-    if (connectWatchdog) clearTimeout(connectWatchdog);
-    connectWatchdog = setTimeout(() => {
-      if (!peer || !peer.open) {
-        statusText.textContent = "Сервер занят, пробую резервный канал...";
-        if (peer) try { peer.destroy(); } catch (e) {}
-        peer = new Peer("pduo-" + roomCode, peerConfig);
-        peer.on("open", () => {
-          document.getElementById("displayCode").textContent = roomCode;
-          statusText.textContent = "";
-          updateHeader();
-          showScreen("screenLobby");
-        });
-        peer.on("connection", setupConnection);
-      }
-    }, 5500);
-
-    peer = new Peer("pduo-" + roomCode, peerConfig);
-
-    peer.on("open", () => {
-      clearTimeout(connectWatchdog);
-      document.getElementById("displayCode").textContent = roomCode;
-      statusText.textContent = "";
-      updateHeader();
-      showScreen("screenLobby");
-    });
-
-    peer.on("connection", setupConnection);
-
-    peer.on("error", (err) => {
-      clearTimeout(connectWatchdog);
-      if (err.type === "unavailable-id") {
-        roomCode = Math.floor(1000 + Math.random() * 9000).toString();
-        document.getElementById("createRoomBtn").click();
-      } else {
-        statusText.textContent = "Ошибка сети (" + err.type + "). Проверь интернет и нажми снова.";
-      }
-    });
+    const newCode = Math.floor(1000 + Math.random() * 9000).toString();
+    connectToRoomBroker(newCode, true);
   });
 
   function joinByCode(code) {
@@ -929,20 +938,7 @@
       statusText.textContent = "Введите 4-значный код комнаты!";
       return;
     }
-    if (peer) { try { peer.destroy(); } catch (e) {} }
-
-    isHost = false;
-    roomCode = code;
-    statusText.textContent = "Ищем комнату " + code + "...";
-
-    peer = new Peer(peerConfig);
-    peer.on("open", () => {
-      const connection = peer.connect("pduo-" + code, { reliable: true });
-      setupConnection(connection);
-    });
-    peer.on("error", () => {
-      statusText.textContent = "Комната " + code + " не найдена или ещё не создана.";
-    });
+    connectToRoomBroker(code, false);
   }
 
   document.getElementById("joinRoomBtn").addEventListener("click", () => {
@@ -1011,7 +1007,7 @@
 
   document.querySelectorAll(".game-card").forEach(card => {
     card.addEventListener("click", () => {
-      if (!conn || !conn.open) {
+       if (!isConnected) {
         alert("Сначала дождитесь подключения второго игрока!");
         return;
       }
