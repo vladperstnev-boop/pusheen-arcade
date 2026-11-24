@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pusheen Arcade — Игры вдвоём</title>
+  <title>Pusheen Arcade Party — Игры на 2–4 игрока</title>
   <style>
     :root {
       --bg-glow: #251736;
@@ -105,24 +105,31 @@
       font-size: 16px;
       overflow: hidden;
       flex-shrink: 0;
+      border: 2px solid var(--accent);
     }
     .corner-ava img { width: 100%; height: 100%; object-fit: cover; }
 
+    .corner-info { text-align: left; }
     .corner-nick {
       font-size: 12px;
       font-weight: 700;
       color: #fff;
-      max-width: 90px;
+      max-width: 95px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1.1;
+    }
+    .corner-title {
+      font-size: 9px;
+      color: var(--accent2);
+      max-width: 95px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    .themes {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
+    .themes { display: flex; gap: 6px; align-items: center; }
 
     .sound-btn {
       background: rgba(255, 255, 255, 0.08);
@@ -141,7 +148,6 @@
       border-radius: 50%;
       border: 1.5px solid rgba(255, 255, 255, 0.25);
       cursor: pointer;
-      transition: transform 0.2s;
     }
     .theme-btn.active { transform: scale(1.22); border-color: #fff; }
     .theme-btn[data-t="pink"]   { background: #ff70b8; }
@@ -151,41 +157,81 @@
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.78);
+      background: rgba(0, 0, 0, 0.8);
       backdrop-filter: blur(4px);
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 14px;
       z-index: 200;
     }
     .modal-backdrop.open { display: flex; animation: fadeIn 0.2s ease; }
 
     .modal-card {
       width: 100%;
-      max-width: 360px;
+      max-width: 375px;
       background: #14141f;
       border: 1.5px solid var(--accent-border);
       border-radius: 24px;
-      padding: 18px 16px;
+      padding: 16px 14px;
       text-align: center;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+      max-height: 92vh;
+      overflow-y: auto;
     }
 
     .modal-stats {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin: 12px 0;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin: 10px 0;
     }
     .stat-box {
       background: #0b0b12;
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 12px;
-      padding: 8px 4px;
+      border-radius: 11px;
+      padding: 7px 3px;
     }
-    .stat-val { font-size: 16px; font-weight: 800; color: var(--accent2); }
-    .stat-lbl { font-size: 10px; color: #8f9bb3; text-transform: uppercase; }
+    .stat-val { font-size: 14px; font-weight: 800; color: var(--accent2); }
+    .stat-lbl { font-size: 9px; color: #8f9bb3; text-transform: uppercase; }
+
+    .field-lbl {
+      display: block;
+      text-align: left;
+      font-size: 10px;
+      color: #8f9bb3;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      margin: 8px 0 4px;
+    }
+
+    input[type="text"], select {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 12px;
+      padding: 8px 10px;
+      color: #fff;
+      font-size: 13.5px;
+      font-weight: 600;
+      outline: none;
+    }
+    select option { background: #14141f; color: #fff; }
+
+    .ring-colors {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 6px 0 10px;
+    }
+    .ring-dot {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+    .ring-dot.active { border-color: #fff; transform: scale(1.15); }
 
     .screen { display: none; }
     .screen.active { display: block; animation: fadeIn 0.25s ease; }
@@ -198,37 +244,24 @@
     h1 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
     .sub { font-size: 12px; color: #8f9bb3; margin-bottom: 14px; }
 
-    input[type="text"] {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 12px;
-      padding: 9px 11px;
-      color: #fff;
-      font-size: 14px;
-      font-weight: 600;
-      outline: none;
-    }
-    input[type="text"]:focus { border-color: var(--accent); }
-
     .avatars-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 6px;
-      margin: 10px 0 12px;
+      margin: 8px 0 12px;
     }
 
     .ava {
-      width: 38px;
-      height: 38px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.06);
       border: 2px solid transparent;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 19px;
+      font-size: 18px;
       cursor: pointer;
       overflow: hidden;
       flex-shrink: 0;
@@ -245,7 +278,7 @@
       border: 1px dashed var(--accent-border);
       color: #fff;
       border-radius: 12px;
-      padding: 7px 10px;
+      padding: 6px 9px;
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
@@ -262,7 +295,6 @@
       font-size: 13.5px;
       font-weight: 800;
       cursor: pointer;
-      transition: transform 0.15s;
     }
     .btn:active { transform: scale(0.97); }
 
@@ -272,11 +304,7 @@
       border: 1px solid rgba(255, 255, 255, 0.14);
     }
 
-    .join-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-    }
+    .join-row { display: flex; gap: 8px; margin-top: 10px; }
     .join-row input {
       text-align: center;
       letter-spacing: 3px;
@@ -291,27 +319,38 @@
       color: var(--accent2);
       min-height: 18px;
     }
-    .players-header {
+    .players-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .p-slot {
       display: flex;
       align-items: center;
       justify-content: space-between;
       background: #0b0b11;
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      padding: 7px 10px;
-      margin-bottom: 9px;
+      border-radius: 13px;
+      padding: 5px 8px;
+      font-size: 11.5px;
     }
+    .p-slot.empty { opacity: 0.45; border-style: dashed; }
 
-    .p-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
+    .p-slot-left { display: flex; align-items: center; gap: 6px; overflow: hidden; }
+    .p-slot-name {
       font-weight: 700;
-      max-width: 39%;
+      white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      white-space: nowrap;
+      max-width: 82px;
+    }
+    .p-slot-pts {
+      font-family: "Courier New", monospace;
+      font-weight: 800;
+      color: var(--accent2);
+      font-size: 12px;
     }
 
     .mini-ava {
@@ -319,7 +358,7 @@
       height: 24px;
       border-radius: 50%;
       background: var(--accent-soft);
-      border: 1px solid var(--accent-border);
+      border: 1.5px solid var(--accent);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -329,23 +368,47 @@
     }
     .mini-ava img { width: 100%; height: 100%; object-fit: cover; }
 
-    .score-pill {
-      background: var(--accent-soft);
-      border: 1px solid var(--accent-border);
-      color: #fff;
-      padding: 3px 10px;
+    .lobby-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 8px;
+      background: rgba(255, 255, 255, 0.04);
       border-radius: 12px;
-      font-family: "Courier New", monospace;
+      padding: 5px 8px;
+    }
+
+    .cap-pills { display: flex; gap: 4px; }
+    .cap-btn {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ccc;
+      border-radius: 8px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .cap-btn.active { background: var(--accent); color: #111; border-color: var(--accent); }
+
+    .leave-btn {
+      background: rgba(255, 71, 87, 0.16);
+      border: 1px solid rgba(255, 71, 87, 0.45);
+      color: #ff6b81;
+      border-radius: 8px;
+      padding: 4px 9px;
+      font-size: 11px;
       font-weight: 800;
-      font-size: 13px;
+      cursor: pointer;
     }
 
     .room-code-box {
       background: var(--accent-soft);
       border: 1px dashed var(--accent-border);
-      border-radius: 14px;
-      padding: 6px 10px;
-      margin-bottom: 9px;
+      border-radius: 13px;
+      padding: 5px 10px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -354,7 +417,7 @@
 
     .room-code-val {
       font-family: "Courier New", monospace;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 800;
       color: var(--accent2);
       letter-spacing: 2px;
@@ -364,8 +427,8 @@
       background: rgba(255, 255, 255, 0.12);
       border: none;
       color: #fff;
-      border-radius: 10px;
-      padding: 5px 10px;
+      border-radius: 9px;
+      padding: 4px 9px;
       font-size: 11px;
       font-weight: 700;
       cursor: pointer;
@@ -375,8 +438,8 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
-      margin-bottom: 9px;
-      max-height: 265px;
+      margin-bottom: 8px;
+      max-height: 235px;
       overflow-y: auto;
       padding-right: 2px;
     }
@@ -388,10 +451,9 @@
       background: #0d0d14;
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 14px;
-      padding: 8px 11px;
+      padding: 7px 10px;
       cursor: pointer;
       text-align: left;
-      transition: transform 0.12s;
     }
     .game-card:active { transform: scale(0.98); }
     .game-card.featured {
@@ -400,52 +462,38 @@
     }
 
     .g-info { display: flex; align-items: center; gap: 9px; }
-    .g-icon { font-size: 21px; }
+    .g-icon { font-size: 20px; }
     .g-title { font-size: 12.5px; font-weight: 700; color: #fff; }
     .g-desc { font-size: 10px; color: #8f9bb3; }
     .g-play {
-      font-size: 10.5px;
+      font-size: 10px;
       font-weight: 800;
       color: var(--accent);
       background: var(--accent-soft);
       padding: 4px 8px;
-      border-radius: 9px;
+      border-radius: 8px;
       flex-shrink: 0;
     }
-
     .chat-history {
-      height: 76px;
+      height: 68px;
       overflow-y: auto;
       background: #09090f;
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 12px;
-      padding: 6px 9px;
-      margin-top: 6px;
+      padding: 5px 8px;
+      margin-top: 5px;
       text-align: left;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
       scroll-behavior: smooth;
     }
-    .chat-msg {
-      font-size: 11.5px;
-      line-height: 1.35;
-      color: #e2e8f0;
-      word-break: break-word;
-    }
+    .chat-msg { font-size: 11px; line-height: 1.3; color: #e2e8f0; word-break: break-word; }
     .chat-msg b { color: var(--accent2); }
     .chat-msg.me b { color: var(--accent); }
 
-    .chat-bar {
-      display: flex;
-      gap: 6px;
-      margin-top: 6px;
-    }
-    .chat-bar input {
-      padding: 7px 10px;
-      font-size: 12px;
-      border-radius: 11px;
-    }
+    .chat-bar { display: flex; gap: 6px; margin-top: 6px; }
+    .chat-bar input { padding: 6px 10px; font-size: 12px; border-radius: 11px; }
     .chat-send {
       background: var(--accent-soft);
       border: 1px solid var(--accent-border);
@@ -456,12 +504,7 @@
       cursor: pointer;
     }
 
-    .quick-chat {
-      display: flex;
-      justify-content: center;
-      gap: 7px;
-      margin-top: 7px;
-    }
+    .quick-chat { display: flex; justify-content: center; gap: 7px; margin-top: 6px; }
     .emote-btn {
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.1);
@@ -470,7 +513,6 @@
       font-size: 14px;
       cursor: pointer;
     }
-    .emote-btn:active { transform: scale(0.9); }
 
     .floating-emote {
       position: fixed;
@@ -505,7 +547,7 @@
 
     .round-score {
       font-family: "Courier New", monospace;
-      font-size: 13.5px;
+      font-size: 12.5px;
       font-weight: 800;
       color: var(--accent2);
     }
@@ -513,7 +555,7 @@
     canvas.game-canvas {
       width: 100%;
       max-width: 340px;
-      height: 400px;
+      height: 390px;
       background: #08080e;
       border: 2px solid var(--accent-border);
       border-radius: 18px;
@@ -525,7 +567,7 @@
     .reaction-arena {
       position: relative;
       width: 100%;
-      height: 320px;
+      height: 310px;
       background: #08080e;
       border: 2px solid var(--accent-border);
       border-radius: 18px;
@@ -551,34 +593,27 @@
       to   { transform: scale(1); }
     }
 
-    .rps-box {
-      padding: 16px 8px;
+    .party-box {
+      padding: 14px 10px;
       background: #0b0b12;
       border: 1.5px solid var(--accent-border);
       border-radius: 18px;
     }
-    .rps-arena {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      margin: 14px 0 18px;
-      font-size: 46px;
+
+    .dice-track { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+    .track-row { background: rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 6px 8px; text-align: left; }
+    .track-bar { height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 6px; margin-top: 4px; overflow: hidden; }
+    .track-fill { height: 100%; background: var(--grad-main); width: 0%; transition: width 0.35s ease; }
+
+    .bomb-holder {
+      font-size: 54px;
+      margin: 10px 0;
+      animation: pulseBomb 0.6s infinite alternate;
     }
-    .rps-choices {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
+    @keyframes pulseBomb {
+      from { transform: scale(0.94); }
+      to   { transform: scale(1.08); }
     }
-    .rps-btn {
-      width: 68px;
-      height: 68px;
-      border-radius: 18px;
-      background: var(--accent-soft);
-      border: 1.5px solid var(--accent-border);
-      font-size: 30px;
-      cursor: pointer;
-    }
-    .rps-btn:active { transform: scale(0.92); }
 
     .ttt-grid {
       display: grid;
@@ -587,7 +622,6 @@
       max-width: 280px;
       margin: 12px auto;
     }
-
     .ttt-cell {
       aspect-ratio: 1 / 1;
       background: #0b0b12;
@@ -602,19 +636,19 @@
     }
     .ttt-cell.x { color: #ff70b8; }
     .ttt-cell.o { color: #ffd43b; }
-    .ttt-cell.win-cell {
-      border-color: #55efc4;
-      background: rgba(85, 239, 196, 0.18);
-    }
+    .ttt-cell.win-cell { border-color: #55efc4; background: rgba(85, 239, 196, 0.18); }
   </style>
 </head>
 <body>
 
 <div class="app-box">
   <div class="top-bar">
-    <div class="corner-profile" id="openProfileBtn" title="Открыть профиль и статистику">
+    <div class="corner-profile" id="openProfileBtn" title="Настройки профиля и статистика">
       <div class="corner-ava" id="cornerAva">🐱</div>
-      <div class="corner-nick" id="cornerNick">Игрок</div>
+      <div class="corner-info">
+        <div class="corner-nick" id="cornerNick">Игрок</div>
+        <div class="corner-title" id="cornerTitle">Любитель пончиков</div>
+      </div>
     </div>
 
     <div class="themes">
@@ -626,10 +660,10 @@
     </div>
   </div>
 
-  <!-- ЭКРАН 1: ВХОД И СОЗДАНИЕ КОМНАТЫ -->
+  <!-- ЭКРАН 1: ГЛАВНАЯ -->
   <div class="screen active" id="screenConnect">
-    <h1>Pusheen Arcade</h1>
-    <div class="sub">Нажми на аватарку в углу, чтобы изменить профиль</div>
+    <h1>Pusheen Party</h1>
+    <div class="sub">Игры на 2, 3 и 4 игрока • Нажми на аву для настроек</div>
 
     <button class="btn" id="createRoomBtn">+ Создать комнату</button>
 
@@ -641,17 +675,23 @@
     <div class="status-text" id="statusText"></div>
   </div>
 
-  <!-- ЭКРАН 2: ЛОББИ И ВЫБОР ИГРЫ -->
+  <!-- ЭКРАН 2: ЛОББИ (2–4 ИГРОКА) -->
   <div class="screen" id="screenLobby">
-    <div class="players-header">
-      <div class="p-badge" id="p1Badge"></div>
-      <div class="score-pill" id="globalScore">0 : 0</div>
-      <div class="p-badge" id="p2Badge">Ожидание... ⏳</div>
+    <div class="players-grid" id="playersGrid"></div>
+
+    <div class="lobby-controls">
+      <div class="cap-pills" id="capacityControls">
+        <span style="font-size:10.5px;color:#8f9bb3;align-self:center;margin-right:3px;">Мест:</span>
+        <button class="cap-btn" data-cap="2">2</button>
+        <button class="cap-btn" data-cap="3">3</button>
+        <button class="cap-btn active" data-cap="4">4</button>
+      </div>
+      <button class="leave-btn" id="leaveRoomBtn">🚪 Выйти</button>
     </div>
 
     <div class="room-code-box">
       <span>Код: <span class="room-code-val" id="displayCode">----</span></span>
-      <button class="copy-mini" id="copyLinkBtn">🔗 Ссылка-приглашение</button>
+      <button class="copy-mini" id="copyLinkBtn">🔗 Пригласить</button>
     </div>
 
     <div class="games-grid">
@@ -659,30 +699,30 @@
         <div class="g-info">
           <div class="g-icon">🐱</div>
           <div>
-            <div class="g-title">Пушин: Вкусняшки</div>
-            <div class="g-desc">Крупные пончики (+1), звёзды (+3) и перец (-2)</div>
+            <div class="g-title">Пушин: Вкусняшки (2–4 игрока)</div>
+            <div class="g-desc">Все котики на одной поляне ловят пончики и звёзды!</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
       </div>
 
-      <div class="game-card" data-game="pong">
+      <div class="game-card featured" data-game="dice">
         <div class="g-info">
-          <div class="g-icon">🏓</div>
+          <div class="g-icon">🎲</div>
           <div>
-            <div class="g-title">Неоновый Пинг-Понг</div>
-            <div class="g-desc">Быстрый теннис с ускорением мяча до 5 очков</div>
+            <div class="g-title">Гонка Кубиков (2–4 игрока)</div>
+            <div class="g-desc">Кидай кубик и первым добеги до 25 очков!</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
       </div>
 
-      <div class="game-card" data-game="hockey">
+      <div class="game-card featured" data-game="bomb">
         <div class="g-info">
-          <div class="g-icon">🏒</div>
+          <div class="g-icon">💣</div>
           <div>
-            <div class="g-title">Аэрохоккей 1 на 1</div>
-            <div class="g-desc">Забей 5 шайб в ворота соперника</div>
+            <div class="g-title">Горячая Бомба (2–4 игрока)</div>
+            <div class="g-desc">Перекинь тикающую бомбу другому, пока не рванула!</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
@@ -692,19 +732,30 @@
         <div class="g-info">
           <div class="g-icon">⚡</div>
           <div>
-            <div class="g-title">Дуэль на реакцию</div>
-            <div class="g-desc">Набери 10 очков и не трогай 💣</div>
+            <div class="g-title">Реакция на скорость (2–4 игрока)</div>
+            <div class="g-desc">Кто из компании первым наберёт 10 очков</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
       </div>
 
-      <div class="game-card" data-game="rps">
+      <div class="game-card" data-game="pong">
         <div class="g-info">
-          <div class="g-icon">✂️</div>
+          <div class="g-icon">🏓</div>
           <div>
-            <div class="g-title">Камень, Ножницы, Бумага</div>
-            <div class="g-desc">Классика до 3 побед</div>
+            <div class="g-title">Неоновый Пинг-Понг (1 на 1)</div>
+            <div class="g-desc">Дуэль двух игроков до 5 очков</div>
+          </div>
+        </div>
+        <div class="g-play">Играть</div>
+      </div>
+
+      <div class="game-card" data-game="hockey">
+        <div class="g-info">
+          <div class="g-icon">🏒</div>
+          <div>
+            <div class="g-title">Аэрохоккей (1 на 1)</div>
+            <div class="g-desc">Дуэль двух игроков до 5 голов</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
@@ -714,8 +765,8 @@
         <div class="g-info">
           <div class="g-icon">⭕</div>
           <div>
-            <div class="g-title">Крестики-нолики</div>
-            <div class="g-desc">Дуэль на поле 3×3</div>
+            <div class="g-title">Крестики-нолики (1 на 1)</div>
+            <div class="g-desc">Классическая дуэль на поле 3×3</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
@@ -723,10 +774,10 @@
     </div>
 
     <div class="chat-history" id="chatLog">
-      <div class="chat-msg" style="color:#8f9bb3;">💬 Чат комнаты (можно листать)...</div>
+      <div class="chat-msg" style="color:#8f9bb3;">💬 Общий чат комнаты...</div>
     </div>
     <div class="chat-bar">
-      <input type="text" id="chatInput" maxlength="80" placeholder="Написать сообщение...">
+      <input type="text" id="chatInput" maxlength="80" placeholder="Написать в чат...">
       <button class="chat-send" id="chatSendBtn">➤</button>
     </div>
 
@@ -742,9 +793,9 @@
   <!-- ЭКРАН 3: ИГРОВАЯ АРЕНА -->
   <div class="screen" id="screenGame">
     <div class="game-topbar">
-      <button class="back-btn" id="backToLobbyBtn">← В меню</button>
-      <div class="round-score" id="roundScore">0 : 0</div>
-      <div style="font-size: 11.5px; color: #8f9bb3;" id="gameHint">Удачи!</div>
+      <button class="back-btn" id="backToLobbyBtn">← В лобби</button>
+      <div class="round-score" id="roundScore">Счёт</div>
+      <div style="font-size: 11px; color: #8f9bb3;" id="gameHint">Удачи!</div>
     </div>
 
     <div id="gameContainer"></div>
@@ -752,17 +803,16 @@
     <div class="quick-chat">
       <button class="emote-btn" data-em="🐱">🐱</button>
       <button class="emote-btn" data-em="😱">😱</button>
-      <button class="emote-btn" data-em="🥜">🥜</button>
+      <button class="emote-btn" data-em="💣">💣</button>
       <button class="emote-btn" data-em="👑">👑</button>
     </div>
   </div>
 </div>
 
-<!-- МОДАЛЬНОЕ ОКНО ПРОФИЛЯ -->
+<!-- МОДАЛЬНОЕ ОКНО НАСТРОЕК ПРОФИЛЯ -->
 <div class="modal-backdrop" id="profileModal">
   <div class="modal-card">
-    <h2 style="font-size:17px; margin-bottom:2px;">Твой профиль</h2>
-    <div style="font-size:11px; color:#8f9bb3;">Сохраняется автоматически на устройстве</div>
+    <h2 style="font-size:17px;">Настройка профиля</h2>
 
     <div class="modal-stats">
       <div class="stat-box">
@@ -774,13 +824,37 @@
         <div class="stat-lbl">Побед</div>
       </div>
       <div class="stat-box">
+        <div class="stat-val" id="statStreak">0</div>
+        <div class="stat-lbl">Серия 🔥</div>
+      </div>
+      <div class="stat-box">
         <div class="stat-val" id="statWinrate">0%</div>
         <div class="stat-lbl">Винрейт</div>
       </div>
     </div>
 
-    <input type="text" id="nickInput" maxlength="12" placeholder="Твой ник...">
+    <span class="field-lbl">Твой никнейм</span>
+    <input type="text" id="nickInput" maxlength="12" placeholder="Введи ник...">
 
+    <span class="field-lbl">Титул под ником</span>
+    <select id="titleSelect">
+      <option value="Любитель пончиков 🍩">Любитель пончиков 🍩</option>
+      <option value="Король Пушинов 👑">Король Пушинов 👑</option>
+      <option value="Ночной геймер 🌙">Ночной геймер 🌙</option>
+      <option value="Мастер клика ⚡">Мастер клика ⚡</option>
+      <option value="Легенда комнаты 🔥">Легенда комнаты 🔥</option>
+    </select>
+
+    <span class="field-lbl">Цвет рамки аватара</span>
+    <div class="ring-colors" id="ringPicker">
+      <div class="ring-dot active" data-ring="#ff70b8" style="background:#ff70b8;"></div>
+      <div class="ring-dot" data-ring="#ffd43b" style="background:#ffd43b;"></div>
+      <div class="ring-dot" data-ring="#55efc4" style="background:#55efc4;"></div>
+      <div class="ring-dot" data-ring="#c084fc" style="background:#c084fc;"></div>
+      <div class="ring-dot" data-ring="#38bdf8" style="background:#38bdf8;"></div>
+    </div>
+
+    <span class="field-lbl">Аватар или своё фото</span>
     <div class="avatars-row" id="avatarPicker">
       <div class="ava active" data-ava="🐱">🐱</div>
       <div class="ava" data-ava="🦊">🦊</div>
@@ -791,10 +865,11 @@
       <input type="file" id="avaFileInput" accept="image/*" style="display:none;">
     </div>
 
-    <button class="btn" id="saveProfileModalBtn" style="margin-bottom:8px;">✓ Сохранить профиль</button>
+    <button class="btn" id="saveProfileModalBtn" style="margin-bottom:8px;">✓ Сохранить изменения</button>
     <div style="display:flex; gap:8px;">
-      <button class="btn btn-secondary" id="exportAccBtn" style="font-size:12px;">💾 Код акка</button>
-      <button class="btn btn-secondary" id="closeProfileModalBtn" style="font-size:12px;">Закрыть</button>
+      <button class="btn btn-secondary" id="exportAccBtn" style="font-size:11.5px;">💾 Код акка</button>
+      <button class="btn btn-secondary" id="resetStatsBtn" style="font-size:11.5px;color:#ff6b81;">Сброс статы</button>
+      <button class="btn btn-secondary" id="closeProfileModalBtn" style="font-size:11.5px;">Закрыть</button>
     </div>
   </div>
 </div>
@@ -831,12 +906,12 @@
     if (kind === "goal")  { playTone(523, "square", 0.09); setTimeout(() => playTone(784, "square", 0.18), 100); }
     if (kind === "pop")   { playTone(720, "sine", 0.06, 0.08); }
     if (kind === "win")   {
-      const winNotes = new Array(523, 659, 784, 1046);
-      winNotes.forEach((f, i) => setTimeout(() => playTone(f, "triangle", 0.16), i * 90));
+      const n = new Array(523, 659, 784, 1046);
+      n.forEach((f, i) => setTimeout(() => playTone(f, "triangle", 0.16), i * 90));
     }
     if (kind === "lose")  {
-      const loseNotes = new Array(392, 330, 262);
-      loseNotes.forEach((f, i) => setTimeout(() => playTone(f, "sawtooth", 0.16, 0.08), i * 105));
+      const n = new Array(392, 330, 262);
+      n.forEach((f, i) => setTimeout(() => playTone(f, "sawtooth", 0.16, 0.08), i * 105));
     }
   }
 
@@ -860,24 +935,34 @@
 
   const profileModal = document.getElementById("profileModal");
   const nickInput = document.getElementById("nickInput");
+  const titleSelect = document.getElementById("titleSelect");
   const avatarPicker = document.getElementById("avatarPicker");
   const avaFileInput = document.getElementById("avaFileInput");
   const customAvaPreview = document.getElementById("customAvaPreview");
 
-  let accData = JSON.parse(localStorage.getItem("pusheen_acc_v3") || "null") || {
+  let accData = JSON.parse(localStorage.getItem("pusheen_acc_v4") || "null") || {
     nick: "Игрок",
+    title: "Любитель пончиков 🍩",
+    ring: "#ff70b8",
     ava: "🐱",
     wins: 0,
-    games: 0
+    games: 0,
+    streak: 0,
+    bestStreak: 0
   };
 
   let myNick = accData.nick;
   let myAva = accData.ava;
-  nickInput.value = myNick;
+  let myRing = accData.ring || "#ff70b8";
+  let myTitle = accData.title || "Любитель пончиков 🍩";
 
+  nickInput.value = myNick;
+  titleSelect.value = myTitle;
   function renderCornerProfile() {
     document.getElementById("cornerNick").textContent = accData.nick;
+    document.getElementById("cornerTitle").textContent = accData.title;
     const cAva = document.getElementById("cornerAva");
+    cAva.style.borderColor = accData.ring;
     if (accData.ava.startsWith("data:image")) {
       cAva.innerHTML = `<img src="${accData.ava}" alt="">`;
     } else {
@@ -885,6 +970,7 @@
     }
     document.getElementById("statGames").textContent = accData.games;
     document.getElementById("statWins").textContent = accData.wins;
+    document.getElementById("statStreak").textContent = accData.bestStreak || 0;
     const wr = accData.games > 0 ? Math.round((accData.wins / accData.games) * 100) : 0;
     document.getElementById("statWinrate").textContent = wr + "%";
   }
@@ -902,18 +988,55 @@
     }
   }
 
+  document.querySelectorAll(".ring-dot").forEach(dot => {
+    if (dot.getAttribute("data-ring") === myRing) dot.classList.add("active");
+    else dot.classList.remove("active");
+    dot.addEventListener("click", () => {
+      document.querySelectorAll(".ring-dot").forEach(d => d.classList.remove("active"));
+      dot.classList.add("active");
+      myRing = dot.getAttribute("data-ring");
+      playSFX("pop");
+    });
+  });
+
   applySelectedAvatar(myAva);
   renderCornerProfile();
 
+  let myClientId = sessionStorage.getItem("pusheen_cid");
+  if (!myClientId) {
+    myClientId = "u_" + Math.random().toString(36).slice(2, 9);
+    sessionStorage.setItem("pusheen_cid", myClientId);
+  }
+
+  let roomPlayers = new Map();
+  let maxPlayers = 4;
+  let isHost = false;
+
+  function syncMyPlayerEntry() {
+    const prev = roomPlayers.get(myClientId);
+    roomPlayers.set(myClientId, {
+      id: myClientId,
+      nick: myNick,
+      ava: myAva,
+      ring: myRing,
+      isHost: isHost,
+      score: prev ? prev.score : 0
+    });
+  }
+
   function saveAccount(broadcast = false) {
     accData.nick = nickInput.value.trim() || "Игрок";
+    accData.title = titleSelect.value;
+    accData.ring = myRing;
     accData.ava = myAva;
     myNick = accData.nick;
-    localStorage.setItem("pusheen_acc_v3", JSON.stringify(accData));
+    myTitle = accData.title;
+    localStorage.setItem("pusheen_acc_v4", JSON.stringify(accData));
     renderCornerProfile();
-    if (typeof updateHeader === "function") updateHeader();
+    syncMyPlayerEntry();
+    if (typeof renderPlayersGrid === "function") renderPlayersGrid();
     if (broadcast && typeof sendData === "function") {
-      sendData({ type: "hello", nick: myNick, ava: myAva });
+      sendData({ type: "player_info", player: roomPlayers.get(myClientId) });
     }
   }
 
@@ -933,17 +1056,22 @@
     playSFX("eat");
   });
 
+  document.getElementById("resetStatsBtn").addEventListener("click", () => {
+    if (confirm("Сбросить статистику игр и побед?")) {
+      accData.wins = 0; accData.games = 0; accData.streak = 0; accData.bestStreak = 0;
+      saveAccount(false);
+    }
+  });
+
   document.getElementById("exportAccBtn").addEventListener("click", () => {
     saveAccount(false);
     const saveCode = btoa(unescape(encodeURIComponent(JSON.stringify({
       nick: accData.nick,
       wins: accData.wins,
-      games: accData.games
+      games: accData.games,
+      bestStreak: accData.bestStreak
     }))));
-    const input = prompt(
-      "Твой код сохранения (скопируй его) или вставь чужой код, чтобы загрузить аккаунт:",
-      saveCode
-    );
+    const input = prompt("Твой код сохранения или вставь чужой код:", saveCode);
     if (input && input !== saveCode) {
       try {
         const parsed = JSON.parse(decodeURIComponent(escape(atob(input.trim()))));
@@ -951,27 +1079,23 @@
           accData.nick = parsed.nick;
           accData.wins = Number(parsed.wins) || 0;
           accData.games = Number(parsed.games) || 0;
+          accData.bestStreak = Number(parsed.bestStreak) || 0;
           nickInput.value = accData.nick;
           saveAccount(true);
           alert("Аккаунт загружен!");
         }
       } catch (e) {
-        alert("Неверный код аккаунта.");
+        alert("Неверный код.");
       }
     }
   });
 
   avatarPicker.querySelectorAll(".ava[data-ava]").forEach(el => {
-    el.addEventListener("click", () => {
-      applySelectedAvatar(el.getAttribute("data-ava"));
-      playSFX("pop");
-    });
+    el.addEventListener("click", () => { applySelectedAvatar(el.getAttribute("data-ava")); playSFX("pop"); });
   });
 
   customAvaPreview.addEventListener("click", () => {
-    if (customAvaPreview.querySelector("img")) {
-      applySelectedAvatar(customAvaPreview.querySelector("img").src);
-    }
+    if (customAvaPreview.querySelector("img")) applySelectedAvatar(customAvaPreview.querySelector("img").src);
   });
 
   document.getElementById("uploadAvaBtn").addEventListener("click", () => avaFileInput.click());
@@ -984,13 +1108,10 @@
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        canvas.width = 64;
-        canvas.height = 64;
+        canvas.width = 64; canvas.height = 64;
         const ctx = canvas.getContext("2d");
         const minSide = Math.min(img.width, img.height);
-        const sx = (img.width - minSide) / 2;
-        const sy = (img.height - minSide) / 2;
-        ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, 64, 64);
+        ctx.drawImage(img, (img.width - minSide) / 2, (img.height - minSide) / 2, minSide, minSide, 0, 0, 64, 64);
         applySelectedAvatar(canvas.toDataURL("image/jpeg", 0.68));
         playSFX("eat");
       };
@@ -999,11 +1120,12 @@
     reader.readAsDataURL(file);
   });
 
-  function renderAvatarHtml(avaVal) {
+  function renderAvatarHtml(avaVal, ringColor) {
+    const style = ringColor ? `style="border-color:${ringColor}"` : "";
     if (avaVal && avaVal.startsWith("data:image")) {
-      return `<span class="mini-ava"><img src="${avaVal}" alt=""></span>`;
+      return `<span class="mini-ava" ${style}><img src="${avaVal}" alt=""></span>`;
     }
-    return `<span class="mini-ava">${avaVal || "🐱"}</span>`;
+    return `<span class="mini-ava" ${style}>${avaVal || "🐱"}</span>`;
   }
 
   function showScreen(id) {
@@ -1012,27 +1134,68 @@
   }
   let ws = null;
   let pingTimer = null;
-  let isConnected = false;
-  let isHost = false;
   let roomCode = "";
   let roomTopic = "";
-  const myClientId = "u_" + Math.random().toString(36).slice(2, 9);
-
-  let enemyNick = "Соперник";
-  let enemyAva = "🦊";
-  let winsMe = 0;
-  let winsEnemy = 0;
   let currentGame = null;
   let gameLoopId = null;
 
   const statusText = document.getElementById("statusText");
+  const playersGrid = document.getElementById("playersGrid");
 
-  function updateHeader() {
-    document.getElementById("p1Badge").innerHTML = `${renderAvatarHtml(myAva)} <span>${myNick}</span>`;
-    document.getElementById("p2Badge").innerHTML = isConnected
-      ? `<span>${enemyNick}</span> ${renderAvatarHtml(enemyAva)}`
-      : `<span>Ожидание... ⏳</span>`;
-    document.getElementById("globalScore").textContent = `${winsMe} : ${winsEnemy}`;
+  function renderPlayersGrid() {
+    if (!playersGrid) return;
+    playersGrid.innerHTML = "";
+    const list = Array.from(roomPlayers.values());
+    for (let i = 0; i < maxPlayers; i++) {
+      const p = list.at(i);
+      const slot = document.createElement("div");
+      if (p) {
+        slot.className = "p-slot";
+        const crown = p.isHost ? "👑 " : "";
+        slot.innerHTML = `
+          <div class="p-slot-left">
+            ${renderAvatarHtml(p.ava, p.ring)}
+            <span class="p-slot-name">${crown}${p.nick}</span>
+          </div>
+          <span class="p-slot-pts">${p.score || 0}</span>
+        `;
+      } else {
+        slot.className = "p-slot empty";
+        slot.innerHTML = `<span style="color:#8f9bb3;">Свободно (место ${i + 1})</span>`;
+      }
+      playersGrid.appendChild(slot);
+    }
+
+    document.querySelectorAll(".cap-btn").forEach(btn => {
+      const c = Number(btn.getAttribute("data-cap"));
+      btn.classList.toggle("active", c === maxPlayers);
+      btn.style.display = isHost ? "inline-block" : (c === maxPlayers ? "inline-block" : "none");
+    });
+  }
+
+  document.querySelectorAll(".cap-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (!isHost) return;
+      const newCap = Number(btn.getAttribute("data-cap"));
+      if (roomPlayers.size > newCap) {
+        alert("В комнате уже больше игроков!");
+        return;
+      }
+      maxPlayers = newCap;
+      sessionStorage.setItem("pusheen_room_cap", String(maxPlayers));
+      renderPlayersGrid();
+      broadcastRoomSync();
+      playSFX("pop");
+    });
+  });
+
+  function broadcastRoomSync() {
+    if (!isHost) return;
+    sendData({
+      type: "room_sync",
+      maxPlayers,
+      players: Array.from(roomPlayers.values())
+    });
   }
 
   function encodeVarInt(len) {
@@ -1073,6 +1236,17 @@
       ws.send(buildPublishPacket(roomTopic, JSON.stringify(payload)));
     }
   }
+  function saveSessionRoom() {
+    sessionStorage.setItem("pusheen_room_code", roomCode);
+    sessionStorage.setItem("pusheen_room_host", isHost ? "1" : "0");
+    sessionStorage.setItem("pusheen_room_cap", String(maxPlayers));
+  }
+
+  function clearSessionRoom() {
+    sessionStorage.removeItem("pusheen_room_code");
+    sessionStorage.removeItem("pusheen_room_host");
+    sessionStorage.removeItem("pusheen_room_cap");
+  }
 
   function handleIncomingPacket(buf) {
     const view = new Uint8Array(buf);
@@ -1083,13 +1257,15 @@
       ws.send(buildSubscribePacket(roomTopic));
       document.getElementById("displayCode").textContent = roomCode;
       statusText.textContent = "";
-      updateHeader();
+      syncMyPlayerEntry();
+      renderPlayersGrid();
       showScreen("screenLobby");
+      saveSessionRoom();
       playSFX("eat");
 
       if (!isHost) {
         setTimeout(() => {
-          sendData({ type: "join_req", nick: myNick, ava: myAva });
+          sendData({ type: "join_req", player: roomPlayers.get(myClientId) });
         }, 200);
       }
       return;
@@ -1098,10 +1274,7 @@
     if (type === 3) {
       let idx = 1;
       let b;
-      do {
-        b = view.at(idx++);
-      } while ((b & 128) !== 0);
-
+      do { b = view.at(idx++); } while ((b & 128) !== 0);
       const tLen = (view.at(idx) << 8) | view.at(idx + 1);
       idx += 2 + tLen;
       const jsonStr = new TextDecoder().decode(view.slice(idx));
@@ -1111,20 +1284,51 @@
         if (msg._sender === myClientId) return;
 
         if (msg.type === "join_req" && isHost) {
-          isConnected = true;
-          enemyNick = msg.nick;
-          enemyAva = msg.ava;
-          updateHeader();
+          if (!roomPlayers.has(msg.player.id) && roomPlayers.size >= maxPlayers) {
+            sendData({ type: "room_full", targetId: msg.player.id });
+            return;
+          }
+          const existing = roomPlayers.get(msg.player.id);
+          msg.player.score = existing ? existing.score : 0;
+          msg.player.isHost = false;
+          roomPlayers.set(msg.player.id, msg.player);
+          renderPlayersGrid();
           playSFX("star");
-          sendData({ type: "hello", nick: myNick, ava: myAva });
+          broadcastRoomSync();
           return;
         }
 
-        if (msg.type === "hello") {
-          isConnected = true;
-          enemyNick = msg.nick;
-          enemyAva = msg.ava;
-          updateHeader();
+        if (msg.type === "room_full" && msg.targetId === myClientId) {
+          clearSessionRoom();
+          if (ws) ws.close();
+          showScreen("screenConnect");
+          statusText.textContent = "Комната заполнена! Все места заняты.";
+          return;
+        }
+
+        if (msg.type === "room_sync") {
+          maxPlayers = msg.maxPlayers || 4;
+          roomPlayers.clear();
+          msg.players.forEach(p => roomPlayers.set(p.id, p));
+          syncMyPlayerEntry();
+          renderPlayersGrid();
+          return;
+        }
+
+        if (msg.type === "player_info" && msg.player) {
+          const prev = roomPlayers.get(msg.player.id);
+          if (prev) {
+            msg.player.score = prev.score;
+            roomPlayers.set(msg.player.id, msg.player);
+            renderPlayersGrid();
+          }
+          return;
+        }
+
+        if (msg.type === "player_leave" && msg.id) {
+          roomPlayers.delete(msg.id);
+          renderPlayersGrid();
+          if (isHost) broadcastRoomSync();
           return;
         }
 
@@ -1139,10 +1343,11 @@
 
     isHost = hostMode;
     roomCode = code;
-    roomTopic = "pusheen_arcade_v4/" + code;
-    isConnected = false;
+    roomTopic = "pusheen_party_v5/" + code;
+    roomPlayers.clear();
+    syncMyPlayerEntry();
 
-    statusText.textContent = hostMode ? "Создаём комнату..." : "Входим в комнату " + code + "...";
+    statusText.textContent = hostMode ? "Создаём комнату..." : "Подключаемся к комнате " + code + "...";
 
     try {
       ws = new WebSocket("wss://broker.emqx.io:8084/mqtt", "mqtt");
@@ -1165,8 +1370,17 @@
     }
   }
 
+  const savedRoom = sessionStorage.getItem("pusheen_room_code");
+  const savedHost = sessionStorage.getItem("pusheen_room_host") === "1";
+  const savedCap = Number(sessionStorage.getItem("pusheen_room_cap") || "4");
+  if (savedRoom && savedRoom.length === 4) {
+    maxPlayers = savedCap;
+    connectToRoomBroker(savedRoom, savedHost);
+  }
+
   document.getElementById("createRoomBtn").addEventListener("click", () => {
     saveAccount(false);
+    maxPlayers = 4;
     connectToRoomBroker(Math.floor(1000 + Math.random() * 9000).toString(), true);
   });
 
@@ -1183,16 +1397,27 @@
     joinByCode(document.getElementById("roomCodeInput").value.trim());
   });
 
+  document.getElementById("leaveRoomBtn").addEventListener("click", () => {
+    sendData({ type: "player_leave", id: myClientId });
+    clearSessionRoom();
+    stopCurrentGame();
+    if (ws) { try { ws.close(); } catch (e) {} }
+    roomPlayers.clear();
+    showScreen("screenConnect");
+    statusText.textContent = "Вы вышли из комнаты.";
+    playSFX("pop");
+  });
+
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.has("room")) {
+  if (urlParams.has("room") && !savedRoom) {
     document.getElementById("roomCodeInput").value = urlParams.get("room");
   }
 
   document.getElementById("copyLinkBtn").addEventListener("click", () => {
     const shareUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
-      document.getElementById("copyLinkBtn").textContent = "✓ Ссылка скопирована";
-      setTimeout(() => { document.getElementById("copyLinkBtn").textContent = "🔗 Ссылка-приглашение"; }, 2000);
+      document.getElementById("copyLinkBtn").textContent = "✓ Скопировано";
+      setTimeout(() => { document.getElementById("copyLinkBtn").textContent = "🔗 Пригласить"; }, 2000);
     }).catch(() => alert("Код комнаты: " + roomCode));
   });
 
@@ -1201,16 +1426,13 @@
   let firstChatMsg = true;
 
   function addChatLine(author, text, isMe = false) {
-    if (firstChatMsg) {
-      chatLog.innerHTML = "";
-      firstChatMsg = false;
-    }
+    if (firstChatMsg) { chatLog.innerHTML = ""; firstChatMsg = false; }
     const row = document.createElement("div");
     row.className = "chat-msg" + (isMe ? " me" : "");
     row.innerHTML = `<b>${author}:</b> `;
     row.appendChild(document.createTextNode(text));
     chatLog.appendChild(row);
-    if (chatLog.children.length > 35) chatLog.firstElementChild.remove();
+    if (chatLog.children.length > 40) chatLog.firstElementChild.remove();
     chatLog.scrollTop = chatLog.scrollHeight;
     if (!isMe) playSFX("pop");
   }
@@ -1255,133 +1477,119 @@
 
   document.querySelectorAll(".game-card").forEach(card => {
     card.addEventListener("click", () => {
-      if (!isConnected) {
-        alert("Сначала дождитесь подключения второго игрока!");
+      if (roomPlayers.size < 2) {
+        alert("Нужно минимум 2 игрока в комнате!");
         return;
       }
       const g = card.getAttribute("data-game");
-      startGame(g, true);
-      sendData({ type: "startGame", game: g });
+      const activeIds = Array.from(roomPlayers.keys());
+      startGame(g, true, activeIds);
+      sendData({ type: "startGame", game: g, players: activeIds });
     });
   });
 
-  function finishRound(iWon, customMsg) {
+  function finishPartyRound(winnerId, customMsg) {
     accData.games++;
-    if (iWon === true) {
-      winsMe++;
+    if (winnerId === myClientId) {
       accData.wins++;
+      accData.streak = (accData.streak || 0) + 1;
+      if (accData.streak > (accData.bestStreak || 0)) accData.bestStreak = accData.streak;
       playSFX("win");
-      gameHintEl.textContent = customMsg || "Победа! 🏆";
       const celeb = new Array("🎉", "🐱", "✨", "🍩");
-      for (let i = 0; i < 10; i++) {
-        setTimeout(() => spawnFloatingEmote(celeb.at(i % 4)), i * 80);
-      }
-    } else if (iWon === false) {
-      winsEnemy++;
+      for (let i = 0; i < 10; i++) setTimeout(() => spawnFloatingEmote(celeb.at(i % 4)), i * 80);
+    } else if (winnerId) {
+      accData.streak = 0;
       playSFX("lose");
-      gameHintEl.textContent = customMsg || "Соперник победил!";
-    } else {
-      gameHintEl.textContent = customMsg || "Ничья!";
     }
+
+    if (winnerId && roomPlayers.has(winnerId)) {
+      const wp = roomPlayers.get(winnerId);
+      wp.score = (wp.score || 0) + 1;
+      roomPlayers.set(winnerId, wp);
+    }
+
+    gameHintEl.textContent = customMsg || "Раунд окончен!";
     saveAccount(false);
-    updateHeader();
+    renderPlayersGrid();
+    if (isHost) broadcastRoomSync();
+
     setTimeout(() => {
       stopCurrentGame();
       showScreen("screenLobby");
-    }, 1800);
+    }, 2000);
   }
 
   const gameContainer = document.getElementById("gameContainer");
   const roundScoreEl = document.getElementById("roundScore");
   const gameHintEl = document.getElementById("gameHint");
 
-  let pState = null, pongState = null, hState = null, rState = null, rpsState = null, tttState = null;
+  let pState = null, diceState = null, bombState = null, rState = null, pongState = null, tttState = null;
 
-  function startGame(type, initiator) {
+  function startGame(type, initiator, playerIds) {
     stopCurrentGame();
     currentGame = type;
     showScreen("screenGame");
     gameContainer.innerHTML = "";
     playSFX("pop");
 
-    if (type === "pusheen") initPusheen();
-    if (type === "pong") initPong();
-    if (type === "hockey") initHockey();
+    if (type === "pusheen") initPusheen(playerIds);
+    if (type === "dice") initDiceRace(playerIds);
+    if (type === "bomb") initHotBomb(playerIds, initiator);
     if (type === "reaction") initReaction(initiator);
-    if (type === "rps") initRPS();
-    if (type === "ttt") initTTT(initiator);
+    if (type === "pong") initPong(playerIds);
+    if (type === "hockey") initPong(playerIds);
+    if (type === "ttt") initTTT(playerIds);
   }
 
-  function drawPusheenCat(ctx, x, y, colorTint, label, dizzy) {
+  function drawPusheenCat(ctx, x, y, colorTint, label) {
     ctx.save();
     ctx.translate(x, y);
-    if (dizzy) ctx.rotate(Math.sin(Date.now() * 0.03) * 0.16);
     ctx.fillStyle = colorTint;
+    ctx.beginPath(); ctx.ellipse(0, 4, 24, 18, 0, 0, Math.PI * 2); ctx.fill();
     ctx.beginPath();
-    ctx.ellipse(0, 4, 28, 21, 0, 0, Math.PI * 2);
+    ctx.moveTo(-17, -8); ctx.lineTo(-12, -20); ctx.lineTo(-3, -12);
+    ctx.moveTo(17, -8); ctx.lineTo(12, -20); ctx.lineTo(3, -12);
     ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(-20, -10); ctx.lineTo(-14, -24); ctx.lineTo(-4, -14);
-    ctx.moveTo(20, -10); ctx.lineTo(14, -24); ctx.lineTo(4, -14);
-    ctx.fill();
-    ctx.fillStyle = "#5c5358";
-    ctx.fillRect(-6, -15, 12, 3);
-    ctx.fillRect(-4, -10, 8, 3);
-
     ctx.fillStyle = "#1f1b1d";
-    if (dizzy) {
-      ctx.font = "bold 12px sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText("×", -10, 1);
-      ctx.fillText("×", 10, 1);
-    } else {
-      ctx.beginPath();
-      ctx.arc(-10, -2, 2.6, 0, Math.PI * 2);
-      ctx.arc(10, -2, 2.6, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    ctx.strokeStyle = "#1f1b1d";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(-2.5, 1, 2.5, 0, Math.PI);
-    ctx.arc(2.5, 1, 2.5, 0, Math.PI);
-    ctx.stroke();
-
+    ctx.beginPath(); ctx.arc(-8, -1, 2.2, 0, Math.PI * 2); ctx.arc(8, -1, 2.2, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 11px sans-serif";
+    ctx.font = "bold 10px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(label, 0, 35);
+    ctx.fillText(label, 0, 31);
     ctx.restore();
   }
 
-  function initPusheen() {
-    roundScoreEl.textContent = "0 : 0";
-    gameHintEl.textContent = "30 сек";
-    gameContainer.innerHTML = `<canvas id="pusheenCanvas" class="game-canvas" width="320" height="400"></canvas>`;
+  function initPusheen(playerIds) {
+    const tints = new Array("#b8aeb3", "#ffd43b", "#55efc4", "#c084fc");
+    const cats = new Map();
+    playerIds.forEach((pid, idx) => {
+      const p = roomPlayers.get(pid);
+      cats.set(pid, {
+        id: pid,
+        nick: p ? p.nick : "Игрок",
+        x: 60 + idx * 65,
+        targetX: 60 + idx * 65,
+        pts: 0,
+        color: tints.at(idx % 4)
+      });
+    });
+
+    pState = { cats, items: new Array(), startTime: Date.now(), lastSpawn: 0, lastNetSend: 0, nextId: 1 };
+    gameContainer.innerHTML = `<canvas id="pusheenCanvas" class="game-canvas" width="320" height="390"></canvas>`;
     const canvas = document.getElementById("pusheenCanvas");
     const ctx = canvas.getContext("2d");
 
-    pState = {
-      myX: 160,
-      enX: 160,
-      enTargetX: 160,
-      items: new Array(),
-      popups: new Array(),
-      sMe: 0,
-      sEn: 0,
-      myDizzyUntil: 0,
-      enDizzyUntil: 0,
-      startTime: Date.now(),
-      lastSpawn: 0,
-      lastNetSend: 0,
-      nextId: 1
-    };
+    function updatePusheenTopScore() {
+      const arr = Array.from(pState.cats.values());
+      roundScoreEl.textContent = arr.map(c => `${c.nick.slice(0, 4)}:${c.pts}`).join(" ");
+    }
+    updatePusheenTopScore();
 
     function moveCat(clientX) {
       const rect = canvas.getBoundingClientRect();
-      const nx = Math.max(32, Math.min(288, (clientX - rect.left) * (320 / rect.width)));
-      pState.myX = nx;
+      const nx = Math.max(28, Math.min(292, (clientX - rect.left) * (320 / rect.width)));
+      const me = pState.cats.get(myClientId);
+      if (me) { me.x = nx; me.targetX = nx; }
       const now = Date.now();
       if (now - pState.lastNetSend > 50) {
         pState.lastNetSend = now;
@@ -1389,389 +1597,236 @@
       }
     }
 
-    canvas.addEventListener("touchmove", e => {
-      if (e.touches.length > 0) moveCat(e.touches.item(0).clientX);
-    }, { passive: true });
-    canvas.addEventListener("mousemove", e => {
-      if (e.buttons === 1) moveCat(e.clientX);
-    });
-
-    function addScorePopup(x, y, text, color) {
-      pState.popups.push({ x, y, text, color, life: 1.0 });
-    }
+    canvas.addEventListener("touchmove", e => { if (e.touches.length > 0) moveCat(e.touches.item(0).clientX); }, { passive: true });
+    canvas.addEventListener("mousemove", e => { if (e.buttons === 1) moveCat(e.clientX); });
 
     function loop() {
       if (currentGame !== "pusheen") return;
       const now = Date.now();
-      const leftSec = Math.max(0, 30 - Math.floor((now - pState.startTime) / 1000));
+      const leftSec = Math.max(0, 28 - Math.floor((now - pState.startTime) / 1000));
       gameHintEl.textContent = `${leftSec}с`;
 
-      pState.enX += (pState.enTargetX - pState.enX) * 0.25;
+      pState.cats.forEach(c => {
+        if (c.id !== myClientId) c.x += (c.targetX - c.x) * 0.25;
+      });
 
-      if (isHost && now - pState.lastSpawn > 650 && leftSec > 1) {
+      if (isHost && now - pState.lastSpawn > 520 && leftSec > 1) {
         pState.lastSpawn = now;
-        const pool = new Array(
-          { icon: "🍩", pts: 1, sfx: "eat", color: "#ff85c0", glow: "rgba(255,112,184,0.35)" },
-          { icon: "🍕", pts: 1, sfx: "eat", color: "#ffd43b", glow: "rgba(255,212,59,0.35)" },
-          { icon: "🍰", pts: 2, sfx: "eat", color: "#c084fc", glow: "rgba(192,132,252,0.35)" },
-          { icon: "⭐", pts: 3, sfx: "star", color: "#ffe066", glow: "rgba(255,224,102,0.45)" },
-          { icon: "🌶️", pts: -2, sfx: "chili", color: "#ff4757", glow: "rgba(255,71,87,0.4)" }
-        );
-        const pick = pool.at(Math.floor(Math.random() * pool.length));
+        const r = Math.floor(Math.random() * 5);
+        let pick = { icon: "🍩", pts: 1, glow: "rgba(255,112,184,0.35)" };
+        if (r === 1) pick = { icon: "🍕", pts: 1, glow: "rgba(255,212,59,0.35)" };
+        if (r === 2) pick = { icon: "🍰", pts: 2, glow: "rgba(192,132,252,0.35)" };
+        if (r === 3) pick = { icon: "⭐", pts: 3, glow: "rgba(255,224,102,0.45)" };
+        if (r === 4) pick = { icon: "🌶️", pts: -2, glow: "rgba(255,71,87,0.4)" };
+
         const item = {
           id: pState.nextId++,
-          x: Math.round(28 + Math.random() * 264),
+          x: Math.round(25 + Math.random() * 270),
           y: -18,
-          vy: Number((2.7 + Math.random() * 1.4).toFixed(2)),
+          vy: Number((2.8 + Math.random() * 1.4).toFixed(2)),
           icon: pick.icon,
           pts: pick.pts,
-          sfx: pick.sfx,
-          color: pick.color,
           glow: pick.glow
         };
         pState.items.push(item);
         sendData({ type: "pSpawn", item });
       }
 
+      const meCat = pState.cats.get(myClientId);
       for (let i = pState.items.length - 1; i >= 0; i--) {
         const it = pState.items.at(i);
         it.y += it.vy;
-
-        if (it.y > 322 && it.y < 368 && Math.abs(it.x - pState.myX) < 36) {
-          pState.sMe = Math.max(0, pState.sMe + it.pts);
-          playSFX(it.sfx);
-          if (it.pts < 0) pState.myDizzyUntil = now + 1000;
-          addScorePopup(pState.myX, 315, (it.pts > 0 ? "+" : "") + it.pts, it.color);
-          roundScoreEl.textContent = `${pState.sMe} : ${pState.sEn}`;
-          sendData({ type: "pCatch", id: it.id, score: pState.sMe, pts: it.pts, x: Math.round(pState.myX) });
+        if (meCat && it.y > 315 && it.y < 362 && Math.abs(it.x - meCat.x) < 32) {
+          meCat.pts = Math.max(0, meCat.pts + it.pts);
+          playSFX(it.pts > 0 ? "eat" : "chili");
+          updatePusheenTopScore();
+          sendData({ type: "pCatch", id: it.id, pts: meCat.pts });
           pState.items.splice(i, 1);
           continue;
         }
-        if (it.y > 415) pState.items.splice(i, 1);
+        if (it.y > 405) pState.items.splice(i, 1);
       }
 
       if (leftSec <= 0) {
-        if (pState.sMe === pState.sEn) finishRound(null, "Дружеская ничья! 🍩");
-        else finishRound(pState.sMe > pState.sEn, pState.sMe > pState.sEn ? "Пушин объелся! 🏆" : "Соперник поймал больше!");
+        let best = null;
+        pState.cats.forEach(c => { if (!best || c.pts > best.pts) best = c; });
+        finishPartyRound(best ? best.id : null, best ? `Победил ${best.nick}! 🏆` : "Ничья!");
         return;
       }
 
-      ctx.clearRect(0, 0, 320, 400);
-      ctx.fillStyle = "rgba(255,255,255,0.06)";
-      ctx.fillRect(0, 378, 320, 22);
-
-      ctx.font = "32px sans-serif";
+      ctx.clearRect(0, 0, 320, 390);
+      ctx.font = "30px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       pState.items.forEach(it => {
-        ctx.fillStyle = it.glow || "rgba(255, 255, 255, 0.22)";
-        ctx.beginPath();
-        ctx.arc(it.x, it.y, 20, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillStyle = it.glow || "rgba(255,255,255,0.2)";
+        ctx.beginPath(); ctx.arc(it.x, it.y, 18, 0, Math.PI * 2); ctx.fill();
         ctx.fillText(it.icon, it.x, it.y + 2);
       });
       ctx.textBaseline = "alphabetic";
 
-      ctx.globalAlpha = 0.78;
-      drawPusheenCat(ctx, pState.enX, 346, "#ffd43b", enemyNick, pState.enDizzyUntil > now);
+      pState.cats.forEach(c => {
+        ctx.globalAlpha = c.id === myClientId ? 1 : 0.78;
+        drawPusheenCat(ctx, c.x, 340, c.color, c.nick);
+      });
       ctx.globalAlpha = 1;
-      drawPusheenCat(ctx, pState.myX, 346, "#b8aeb3", myNick, pState.myDizzyUntil > now);
-
-      for (let i = pState.popups.length - 1; i >= 0; i--) {
-        const pop = pState.popups.at(i);
-        pop.y -= 1.1;
-        pop.life -= 0.03;
-        if (pop.life <= 0) { pState.popups.splice(i, 1); continue; }
-        ctx.globalAlpha = pop.life;
-        ctx.fillStyle = pop.color;
-        ctx.font = "bold 17px sans-serif";
-        ctx.fillText(pop.text, pop.x, pop.y);
-        ctx.globalAlpha = 1;
-      }
 
       gameLoopId = requestAnimationFrame(loop);
     }
     loop();
   }
-  // === ИГРА 2: НЕОНОВЫЙ ПИНГ-ПОНГ 1 НА 1 ===
-  function initPong() {
-    gameHintEl.textContent = "До 5 очков";
-    roundScoreEl.textContent = "0 : 0";
-    gameContainer.innerHTML = `<canvas id="pongCanvas" class="game-canvas" width="320" height="400"></canvas>`;
-    const canvas = document.getElementById("pongCanvas");
-    const ctx = canvas.getContext("2d");
+  // === 2. ГОНКА КУБИКОВ (2–4 ИГРОКА) ===
+  function initDiceRace(playerIds) {
+    const pos = new Map();
+    playerIds.forEach(id => pos.set(id, 0));
+    diceState = { order: playerIds, turnIdx: 0, pos };
+    roundScoreEl.textContent = "Цель: 25";
 
-    pongState = {
-      myX: 160,
-      enX: 160,
-      enTargetX: 160,
-      bx: 160, by: 200,
-      bTargetX: 160, bTargetY: 200,
-      vx: isHost ? 3.2 : 0,
-      vy: isHost ? 4.0 : 0,
-      sMe: 0, sEn: 0,
-      lastNetSend: 0,
-      lastSyncSend: 0
-    };
+    gameContainer.innerHTML = `
+      <div class="party-box">
+        <div id="diceTurnText" style="font-size:13px;font-weight:700;margin-bottom:8px;"></div>
+        <div class="dice-track" id="diceTrack"></div>
+        <button class="btn" id="rollDiceBtn">🎲 Бросить кубик</button>
+      </div>
+    `;
 
-    function moveRacket(clientX) {
-      const rect = canvas.getBoundingClientRect();
-      const nx = Math.max(42, Math.min(278, (clientX - rect.left) * (320 / rect.width)));
-      pongState.myX = nx;
-      const now = Date.now();
-      if (now - pongState.lastNetSend > 45) {
-        pongState.lastNetSend = now;
-        sendData({ type: "pongMove", x: Math.round(320 - nx) });
-      }
+    function renderDiceBoard() {
+      const track = document.getElementById("diceTrack");
+      if (!track) return;
+      track.innerHTML = "";
+      diceState.order.forEach(pid => {
+        const p = roomPlayers.get(pid);
+        const val = diceState.pos.get(pid) || 0;
+        const pct = Math.min(100, Math.round((val / 25) * 100));
+        const row = document.createElement("div");
+        row.className = "track-row";
+        row.innerHTML = `
+          <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;">
+            <span>${p ? p.nick : "Игрок"}</span>
+            <span style="color:var(--accent2);">${val} / 25</span>
+          </div>
+          <div class="track-bar"><div class="track-fill" style="width:${pct}%"></div></div>
+        `;
+        track.appendChild(row);
+      });
+
+      const curId = diceState.order.at(diceState.turnIdx % diceState.order.length);
+      const curP = roomPlayers.get(curId);
+      const isMyTurn = curId === myClientId;
+      document.getElementById("diceTurnText").textContent = isMyTurn
+        ? "Твой ход! Жми кубик 🎲"
+        : `Ходит ${curP ? curP.nick : "игрок"}...`;
+      document.getElementById("rollDiceBtn").disabled = !isMyTurn;
+      document.getElementById("rollDiceBtn").style.opacity = isMyTurn ? "1" : "0.45";
     }
 
-    canvas.addEventListener("touchmove", e => {
-      if (e.touches.length > 0) moveRacket(e.touches.item(0).clientX);
-    }, { passive: true });
-    canvas.addEventListener("mousemove", e => {
-      if (e.buttons === 1) moveRacket(e.clientX);
+    renderDiceBoard();
+    diceState.render = renderDiceBoard;
+
+    document.getElementById("rollDiceBtn").addEventListener("click", () => {
+      const curId = diceState.order.at(diceState.turnIdx % diceState.order.length);
+      if (curId !== myClientId) return;
+      const roll = 1 + Math.floor(Math.random() * 6);
+      applyDiceMove(myClientId, roll);
+      sendData({ type: "diceRoll", pid: myClientId, roll });
     });
+  }
 
-    function resetBall(dir) {
-      pongState.bx = 160; pongState.by = 200;
-      pongState.bTargetX = 160; pongState.bTargetY = 200;
-      pongState.vx = (Math.random() * 4 - 2);
-      pongState.vy = 4.0 * dir;
+  function applyDiceMove(pid, roll) {
+    if (!diceState) return;
+    playSFX("pop");
+    const nextVal = (diceState.pos.get(pid) || 0) + roll;
+    diceState.pos.set(pid, nextVal);
+    diceState.turnIdx++;
+    gameHintEl.textContent = `Выпало: ${roll}!`;
+    if (diceState.render) diceState.render();
+
+    if (nextVal >= 25) {
+      const wp = roomPlayers.get(pid);
+      finishPartyRound(pid, `${wp ? wp.nick : "Игрок"} финишировал первым! 🏆`);
     }
+  }
+  // === 3. ГОРЯЧАЯ БОМБА (2–4 ИГРОКА) ===
+  function initHotBomb(playerIds, initiator) {
+    bombState = {
+      players: playerIds,
+      holderId: playerIds.at(0),
+      timeLeft: 14 + Math.floor(Math.random() * 8)
+    };
+    roundScoreEl.textContent = "Не взорвись!";
 
-    function loop() {
-      if (currentGame !== "pong") return;
-      const now = Date.now();
+    gameContainer.innerHTML = `
+      <div class="party-box">
+        <div class="bomb-holder">💣</div>
+        <div id="bombHolderName" style="font-size:15px;font-weight:800;margin-bottom:12px;"></div>
+        <div id="bombTargets" style="display:flex;flex-direction:column;gap:7px;"></div>
+      </div>
+    `;
 
-      pongState.enX += (pongState.enTargetX - pongState.enX) * 0.28;
+    function renderBombUI() {
+      const hP = roomPlayers.get(bombState.holderId);
+      const iHold = bombState.holderId === myClientId;
+      document.getElementById("bombHolderName").textContent = iHold
+        ? "🔥 БОМБА У ТЕБЯ! СРОЧНО ПЕРЕКИНЬ!"
+        : `Бомба у игрока: ${hP ? hP.nick : "..."}`;
 
-      if (isHost) {
-        pongState.bx += pongState.vx;
-        pongState.by += pongState.vy;
-
-        if (pongState.bx < 10 || pongState.bx > 310) {
-          pongState.vx *= -1;
-          playSFX("hit");
-        }
-
-        if (pongState.by > 358 && pongState.by < 376 && Math.abs(pongState.bx - pongState.myX) < 46) {
-          pongState.vy = -Math.min(Math.abs(pongState.vy) + 0.25, 8.2);
-          pongState.vx += (pongState.bx - pongState.myX) * 0.08;
-          pongState.by = 357;
-          playSFX("hit");
-        }
-        if (pongState.by < 42 && pongState.by > 24 && Math.abs(pongState.bx - pongState.enX) < 46) {
-          pongState.vy = Math.min(Math.abs(pongState.vy) + 0.25, 8.2);
-          pongState.vx += (pongState.bx - pongState.enX) * 0.08;
-          pongState.by = 43;
-          playSFX("hit");
-        }
-
-        if (pongState.by < 0) {
-          pongState.sMe++;
-          playSFX("goal");
-          resetBall(1);
-        } else if (pongState.by > 400) {
-          pongState.sEn++;
-          playSFX("goal");
-          resetBall(-1);
-        }
-
-        roundScoreEl.textContent = `${pongState.sMe} : ${pongState.sEn}`;
-
-        if (now - pongState.lastSyncSend > 45) {
-          pongState.lastSyncSend = now;
-          sendData({
-            type: "pongSync",
-            bx: Math.round(320 - pongState.bx),
-            by: Math.round(400 - pongState.by),
-            sMe: pongState.sEn,
-            sEn: pongState.sMe
+      const box = document.getElementById("bombTargets");
+      box.innerHTML = "";
+      if (iHold) {
+        bombState.players.forEach(pid => {
+          if (pid === myClientId) return;
+          const tp = roomPlayers.get(pid);
+          const b = document.createElement("button");
+          b.className = "btn";
+          b.textContent = `👉 Кинуть игроку ${tp ? tp.nick : "Соперник"}`;
+          b.addEventListener("click", () => {
+            bombState.holderId = pid;
+            playSFX("pop");
+            renderBombUI();
+            sendData({ type: "bombPass", toId: pid });
           });
-        }
-
-        if (pongState.sMe >= 5 || pongState.sEn >= 5) {
-          finishRound(pongState.sMe >= 5);
-          return;
-        }
-      } else {
-        pongState.bx += (pongState.bTargetX - pongState.bx) * 0.35;
-        pongState.by += (pongState.bTargetY - pongState.by) * 0.35;
-      }
-
-      ctx.clearRect(0, 0, 320, 400);
-      ctx.strokeStyle = "rgba(255,255,255,0.12)";
-      ctx.setLineDash(new Array(6, 6));
-      ctx.beginPath(); ctx.moveTo(0, 200); ctx.lineTo(320, 200); ctx.stroke();
-      ctx.setLineDash(new Array());
-
-      ctx.fillStyle = "#ffd43b";
-      ctx.fillRect(pongState.enX - 40, 24, 80, 10);
-
-      ctx.fillStyle = "#ff70b8";
-      ctx.fillRect(pongState.myX - 40, 366, 80, 10);
-
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.arc(pongState.bx, pongState.by, 9, 0, Math.PI * 2);
-      ctx.fill();
-
-      gameLoopId = requestAnimationFrame(loop);
-    }
-    loop();
-  }
-
-  // === ИГРА 3: НЕОНОВЫЙ АЭРОХОККЕЙ ===
-  function initHockey() {
-    gameHintEl.textContent = "До 5 голов";
-    roundScoreEl.textContent = "0 : 0";
-    gameContainer.innerHTML = `<canvas id="hockeyCanvas" class="game-canvas" width="320" height="400"></canvas>`;
-    const canvas = document.getElementById("hockeyCanvas");
-    const ctx = canvas.getContext("2d");
-
-    hState = {
-      myX: 160, myY: 345,
-      enX: 160, enY: 55,
-      enTargetX: 160, enTargetY: 55,
-      px: 160, py: 200,
-      pTargetX: 160, pTargetY: 200,
-      vx: isHost ? 3.2 : 0, vy: isHost ? 4.1 : 0,
-      sMe: 0, sEn: 0,
-      lastNetSend: 0,
-      lastSyncSend: 0
-    };
-
-    function movePaddle(clientX, clientY) {
-      const rect = canvas.getBoundingClientRect();
-      let nx = Math.max(26, Math.min(294, (clientX - rect.left) * (320 / rect.width)));
-      let ny = Math.max(224, Math.min(374, (clientY - rect.top) * (400 / rect.height)));
-      hState.myX = nx;
-      hState.myY = ny;
-
-      const now = Date.now();
-      if (now - hState.lastNetSend > 45) {
-        hState.lastNetSend = now;
-        sendData({ type: "hPaddle", x: Math.round(320 - nx), y: Math.round(400 - ny) });
-      }
-    }
-
-    canvas.addEventListener("touchmove", e => {
-      if (e.touches.length > 0) movePaddle(e.touches.item(0).clientX, e.touches.item(0).clientY);
-    }, { passive: true });
-    canvas.addEventListener("mousemove", e => {
-      if (e.buttons === 1) movePaddle(e.clientX, e.clientY);
-    });
-
-    function resetPuck(dir) {
-      hState.px = 160; hState.py = 200;
-      hState.pTargetX = 160; hState.pTargetY = 200;
-      hState.vx = (Math.random() * 4 - 2);
-      hState.vy = 4.2 * dir;
-    }
-
-    function loop() {
-      if (currentGame !== "hockey") return;
-      const now = Date.now();
-
-      hState.enX += (hState.enTargetX - hState.enX) * 0.28;
-      hState.enY += (hState.enTargetY - hState.enY) * 0.28;
-
-      if (isHost) {
-        hState.px += hState.vx;
-        hState.py += hState.vy;
-        if (hState.px < 16 || hState.px > 304) { hState.vx *= -1; playSFX("hit"); }
-
-        const paddles = new Array({ x: hState.myX, y: hState.myY }, { x: hState.enX, y: hState.enY });
-        paddles.forEach(p => {
-          const dx = hState.px - p.x;
-          const dy = hState.py - p.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < 38 && dist > 0) {
-            const angle = Math.atan2(dy, dx);
-            const speed = Math.min(Math.hypot(hState.vx, hState.vy) + 0.35, 8.6);
-            hState.vx = Math.cos(angle) * speed;
-            hState.vy = Math.sin(angle) * speed;
-            hState.px = p.x + Math.cos(angle) * 39;
-            hState.py = p.y + Math.sin(angle) * 39;
-            playSFX("hit");
-          }
+          box.appendChild(b);
         });
-
-        if (hState.py < 12) {
-          if (hState.px > 100 && hState.px < 220) { hState.sMe++; playSFX("goal"); resetPuck(1); }
-          else { hState.vy *= -1; hState.py = 14; playSFX("hit"); }
-        }
-        if (hState.py > 388) {
-          if (hState.px > 100 && hState.px < 220) { hState.sEn++; playSFX("goal"); resetPuck(-1); }
-          else { hState.vy *= -1; hState.py = 386; playSFX("hit"); }
-        }
-
-        roundScoreEl.textContent = `${hState.sMe} : ${hState.sEn}`;
-
-        if (now - hState.lastSyncSend > 45) {
-          hState.lastSyncSend = now;
-          sendData({
-            type: "hSync",
-            px: Math.round(320 - hState.px),
-            py: Math.round(400 - hState.py),
-            sMe: hState.sEn,
-            sEn: hState.sMe
-          });
-        }
-
-        if (hState.sMe >= 5 || hState.sEn >= 5) {
-          finishRound(hState.sMe >= 5);
-          return;
-        }
-      } else {
-        hState.px += (hState.pTargetX - hState.px) * 0.35;
-        hState.py += (hState.pTargetY - hState.py) * 0.35;
       }
-
-      ctx.clearRect(0, 0, 320, 400);
-      ctx.strokeStyle = "rgba(255,255,255,0.12)";
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0, 200); ctx.lineTo(320, 200); ctx.stroke();
-      ctx.beginPath(); ctx.arc(160, 200, 45, 0, Math.PI * 2); ctx.stroke();
-      ctx.fillStyle = "#ff70b8";
-      ctx.fillRect(100, 0, 120, 5);
-      ctx.fillRect(100, 395, 120, 5);
-
-      ctx.fillStyle = "#ffd43b";
-      ctx.beginPath(); ctx.arc(hState.enX, hState.enY, 22, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#ff70b8";
-      ctx.beginPath(); ctx.arc(hState.myX, hState.myY, 22, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath(); ctx.arc(hState.px, hState.py, 14, 0, Math.PI * 2); ctx.fill();
-
-      gameLoopId = requestAnimationFrame(loop);
     }
-    loop();
+
+    bombState.render = renderBombUI;
+    renderBombUI();
+
+    if (initiator) {
+      const timer = setInterval(() => {
+        if (currentGame !== "bomb") { clearInterval(timer); return; }
+        bombState.timeLeft--;
+        playSFX("hit");
+        if (bombState.timeLeft <= 0) {
+          clearInterval(timer);
+          const survivor = bombState.players.find(id => id !== bombState.holderId) || null;
+          sendData({ type: "bombBoom", loserId: bombState.holderId, winnerId: survivor });
+          const lp = roomPlayers.get(bombState.holderId);
+          finishPartyRound(survivor, `💥 БУМ! Взорвался ${lp ? lp.nick : "игрок"}!`);
+        }
+      }, 1000);
+    }
   }
-  // === ИГРА 4: ДУЭЛЬ НА РЕАКЦИЮ С БОМБАМИ ===
+
+  // === 4. РЕАКЦИЯ (2–4 ИГРОКА) ===
   function initReaction(initiator) {
-    gameHintEl.textContent = "До 10! Осторожно 💣";
+    gameHintEl.textContent = "Кто быстрее 10!";
     roundScoreEl.textContent = "0 : 0";
     gameContainer.innerHTML = `<div class="reaction-arena" id="rArena"></div>`;
-    rState = { sMe: 0, sEn: 0, targetId: 0, bombTimer: null };
+    rState = { scores: new Map(), targetId: 0 };
     if (initiator) spawnReactionTarget();
   }
 
   function spawnReactionTarget() {
     if (currentGame !== "reaction") return;
-    if (rState.bombTimer) clearTimeout(rState.bombTimer);
-
-    const icons = new Array("♥", "🥜", "✦", "👑", "💣");
+    const icons = "♥,🥜,✦,👑,💣".split(",");
     const tx = Math.floor(10 + Math.random() * 72);
     const ty = Math.floor(10 + Math.random() * 72);
     const icon = icons.at(Math.floor(Math.random() * icons.length));
     rState.targetId++;
     renderOrb(rState.targetId, tx, ty, icon);
     sendData({ type: "rSpawn", id: rState.targetId, x: tx, y: ty, icon });
-
-    if (icon === "💣" && isHost) {
-      rState.bombTimer = setTimeout(spawnReactionTarget, 1250);
-    }
   }
 
   function renderOrb(id, xPct, yPct, icon) {
@@ -1788,98 +1843,86 @@
       if (rState.targetId !== id) return;
       rState.targetId = -1;
       arena.innerHTML = "";
-      if (isBomb) {
-        rState.sMe = Math.max(0, rState.sMe - 1);
-        playSFX("chili");
-      } else {
-        rState.sMe++;
-        playSFX("eat");
-      }
-      roundScoreEl.textContent = `${rState.sMe} : ${rState.sEn}`;
-      sendData({ type: "rHit", sEn: rState.sMe });
-      if (rState.sMe >= 10) finishRound(true);
-      else setTimeout(spawnReactionTarget, 300);
+      const cur = (rState.scores.get(myClientId) || 0) + (isBomb ? -1 : 1);
+      const nextScore = Math.max(0, cur);
+      rState.scores.set(myClientId, nextScore);
+      playSFX(isBomb ? "chili" : "eat");
+      updateReactionScoreBar();
+      sendData({ type: "rHit", pid: myClientId, score: nextScore });
+      if (nextScore >= 10) finishPartyRound(myClientId, `${myNick} быстрее всех! ⚡`);
+      else setTimeout(spawnReactionTarget, 280);
     });
     arena.appendChild(orb);
   }
 
-  // === ИГРА 5: КАМЕНЬ, НОЖНИЦЫ, БУМАГА ===
-  function initRPS() {
-    rpsState = { myPick: null, enPick: null, sMe: 0, sEn: 0 };
-    roundScoreEl.textContent = "0 : 0";
-    gameHintEl.textContent = "До 3 побед";
-    gameContainer.innerHTML = `
-      <div class="rps-box">
-        <div style="font-size:12px;color:#8f9bb3;" id="rpsStatus">Выбери знак!</div>
-        <div class="rps-arena">
-          <div id="rpsMeView">❓</div>
-          <div style="font-size:16px;color:#8f9bb3;">VS</div>
-          <div id="rpsEnView">❓</div>
-        </div>
-        <div class="rps-choices">
-          <button class="rps-btn" data-p="🪨">🪨</button>
-          <button class="rps-btn" data-p="✂️">✂️</button>
-          <button class="rps-btn" data-p="📄">📄</button>
-        </div>
-      </div>
-    `;
-    gameContainer.querySelectorAll(".rps-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        if (rpsState.myPick) return;
-        rpsState.myPick = btn.getAttribute("data-p");
-        playSFX("pop");
-        document.getElementById("rpsMeView").textContent = rpsState.myPick;
-        document.getElementById("rpsStatus").textContent = "Ждём выбор соперника...";
-        sendData({ type: "rpsPick", pick: rpsState.myPick });
-        resolveRPSRound();
-      });
+  function updateReactionScoreBar() {
+    const parts = new Array();
+    roomPlayers.forEach((p, id) => {
+      parts.push(`${p.nick.slice(0, 4)}:${rState.scores.get(id) || 0}`);
     });
+    roundScoreEl.textContent = parts.join(" ");
+  }
+  // === 5–7. ДУЭЛЬНЫЕ ИГРЫ (ПИНГ-ПОНГ, АЭРОХОККЕЙ, КРЕСТИКИ-НОЛИКИ) ===
+  function initPong(playerIds) {
+    const p1 = playerIds.at(0), p2 = playerIds.at(1);
+    const isP1 = myClientId === p1, isP2 = myClientId === p2;
+    gameHintEl.textContent = isP1 || isP2 ? "До 5 очков" : "Режим зрителя";
+    gameContainer.innerHTML = `<canvas id="pongCanvas" class="game-canvas" width="320" height="390"></canvas>`;
+    const canvas = document.getElementById("pongCanvas");
+    const ctx = canvas.getContext("2d");
+
+    pongState = { p1, p2, x1: 160, x2: 160, bx: 160, by: 195, vx: 3.1, vy: 3.9, s1: 0, s2: 0, lastSend: 0 };
+
+    function moveR(cx) {
+      if (!isP1 && !isP2) return;
+      const rect = canvas.getBoundingClientRect();
+      const nx = Math.max(42, Math.min(278, (cx - rect.left) * (320 / rect.width)));
+      if (isP1) pongState.x1 = nx; else pongState.x2 = 320 - nx;
+      if (Date.now() - pongState.lastSend > 45) {
+        pongState.lastSend = Date.now();
+        sendData({ type: "pongMove", slot: isP1 ? 1 : 2, x: nx });
+      }
+    }
+    canvas.addEventListener("touchmove", e => { if (e.touches.length > 0) moveR(e.touches.item(0).clientX); }, { passive: true });
+    canvas.addEventListener("mousemove", e => { if (e.buttons === 1) moveR(e.clientX); });
+
+    function loop() {
+      if (currentGame !== "pong") return;
+      if (isHost) {
+        pongState.bx += pongState.vx; pongState.by += pongState.vy;
+        if (pongState.bx < 10 || pongState.bx > 310) pongState.vx *= -1;
+        if (pongState.by > 350 && Math.abs(pongState.bx - pongState.x1) < 46) { pongState.vy = -Math.abs(pongState.vy) - 0.2; playSFX("hit"); }
+        if (pongState.by < 40 && Math.abs(pongState.bx - pongState.x2) < 46) { pongState.vy = Math.abs(pongState.vy) + 0.2; playSFX("hit"); }
+        if (pongState.by < 0) { pongState.s1++; pongState.bx = 160; pongState.by = 195; pongState.vy = 3.9; playSFX("goal"); }
+        if (pongState.by > 390) { pongState.s2++; pongState.bx = 160; pongState.by = 195; pongState.vy = -3.9; playSFX("goal"); }
+        roundScoreEl.textContent = `${pongState.s1} : ${pongState.s2}`;
+        sendData({ type: "pongSync", bx: pongState.bx, by: pongState.by, s1: pongState.s1, s2: pongState.s2 });
+        if (pongState.s1 >= 5 || pongState.s2 >= 5) {
+          finishPartyRound(pongState.s1 >= 5 ? p1 : p2);
+          return;
+        }
+      }
+      ctx.clearRect(0, 0, 320, 390);
+      const flip = isP2;
+      const myPaddleX = flip ? 320 - pongState.x2 : pongState.x1;
+      const enPaddleX = flip ? 320 - pongState.x1 : pongState.x2;
+      const ballX = flip ? 320 - pongState.bx : pongState.bx;
+      const ballY = flip ? 390 - pongState.by : pongState.by;
+
+      ctx.fillStyle = "#ffd43b"; ctx.fillRect(enPaddleX - 40, 22, 80, 10);
+      ctx.fillStyle = "#ff70b8"; ctx.fillRect(myPaddleX - 40, 358, 80, 10);
+      ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(ballX, ballY, 9, 0, Math.PI * 2); ctx.fill();
+      gameLoopId = requestAnimationFrame(loop);
+    }
+    loop();
   }
 
-  function resolveRPSRound() {
-    if (!rpsState.myPick || !rpsState.enPick) return;
-    const m = rpsState.myPick;
-    const e = rpsState.enPick;
-    document.getElementById("rpsEnView").textContent = e;
-
-    if (m === e) {
-      document.getElementById("rpsStatus").textContent = "Ничья в раунде!";
-      playSFX("hit");
-    } else if (
-      (m === "🪨" && e === "✂️") ||
-      (m === "✂️" && e === "📄") ||
-      (m === "📄" && e === "🪨")
-    ) {
-      rpsState.sMe++;
-      document.getElementById("rpsStatus").textContent = "Ты забрал раунд!";
-      playSFX("eat");
-    } else {
-      rpsState.sEn++;
-      document.getElementById("rpsStatus").textContent = "Раунд за соперником!";
-      playSFX("chili");
-    }
-
-    roundScoreEl.textContent = `${rpsState.sMe} : ${rpsState.sEn}`;
-
-    if (rpsState.sMe >= 3 || rpsState.sEn >= 3) {
-      finishRound(rpsState.sMe >= 3);
-    } else {
-      setTimeout(() => {
-        if (currentGame !== "rps") return;
-        rpsState.myPick = null;
-        rpsState.enPick = null;
-        document.getElementById("rpsMeView").textContent = "❓";
-        document.getElementById("rpsEnView").textContent = "❓";
-        document.getElementById("rpsStatus").textContent = "Следующий раунд — выбирай!";
-      }, 1300);
-    }
-  }
-  // === ИГРА 6: КРЕСТИКИ-НОЛИКИ (ИСПРАВЛЕНЫ ВСЕ 8 ЛИНИЙ ПОБЕДЫ) ===
-  function initTTT(initiator) {
-    const myMark = initiator ? "X" : "O";
-    tttState = { board: Array(9).fill(""), myMark, myTurn: initiator, over: false };
-    roundScoreEl.textContent = `Ты: ${myMark}`;
-    gameHintEl.textContent = tttState.myTurn ? "Твой ход!" : "Ход соперника...";
+  function initTTT(playerIds) {
+    const p1 = playerIds.at(0), p2 = playerIds.at(1);
+    const myMark = myClientId === p1 ? "X" : (myClientId === p2 ? "O" : "");
+    tttState = { p1, p2, board: Array(9).fill(""), myMark, turn: p1, over: false };
+    roundScoreEl.textContent = myMark ? `Ты: ${myMark}` : "Зритель";
+    gameHintEl.textContent = tttState.turn === myClientId ? "Твой ход!" : "Ход игрока...";
 
     const grid = document.createElement("div");
     grid.className = "ttt-grid";
@@ -1888,8 +1931,8 @@
       cell.className = "ttt-cell";
       cell.dataset.idx = i;
       cell.addEventListener("click", () => {
-        if (tttState.over || !tttState.myTurn || tttState.board.at(i) !== "") return;
-        makeTTTMove(i, tttState.myMark, true);
+        if (tttState.over || tttState.turn !== myClientId || tttState.board.at(i) !== "") return;
+        makeTTTMove(i, myMark, true);
       });
       grid.appendChild(cell);
     }
@@ -1897,135 +1940,82 @@
   }
 
   function makeTTTMove(idx, mark, local) {
-    if (tttState.over) return;
+    if (!tttState || tttState.over) return;
     tttState.board[idx] = mark;
     playSFX("pop");
     const cell = gameContainer.querySelector(`.ttt-cell[data-idx="${idx}"]`);
-    if (cell) {
-      cell.textContent = mark;
-      cell.classList.add(mark.toLowerCase());
-    }
-    if (local) {
-      tttState.myTurn = false;
-      gameHintEl.textContent = "Ход соперника...";
-      sendData({ type: "tttMove", idx, mark });
-    } else {
-      tttState.myTurn = true;
-      gameHintEl.textContent = "Твой ход!";
-    }
-    checkTTTWin();
-  }
+    if (cell) { cell.textContent = mark; cell.classList.add(mark.toLowerCase()); }
+    tttState.turn = tttState.turn === tttState.p1 ? tttState.p2 : tttState.p1;
+    gameHintEl.textContent = tttState.turn === myClientId ? "Твой ход!" : "Ход соперника...";
+    if (local) sendData({ type: "tttMove", idx, mark });
 
-  function checkTTTWin() {
-    const winLines = new Array(
-      new Array(0, 1, 2),
-      new Array(3, 4, 5),
-      new Array(6, 7, 8),
-      new Array(0, 3, 6),
-      new Array(1, 4, 7),
-      new Array(2, 5, 8),
-      new Array(0, 4, 8),
-      new Array(2, 4, 6)
+    const lines = new Array(
+      new Array(0, 1, 2), new Array(3, 4, 5), new Array(6, 7, 8),
+      new Array(0, 3, 6), new Array(1, 4, 7), new Array(2, 5, 8),
+      new Array(0, 4, 8), new Array(2, 4, 6)
     );
-    for (let i = 0; i < winLines.length; i++) {
-      const line = winLines.at(i);
-      const a = line.at(0);
-      const b = line.at(1);
-      const c = line.at(2);
-      const v = tttState.board.at(a);
-      if (v !== "" && v === tttState.board.at(b) && v === tttState.board.at(c)) {
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines.at(i);
+      const v = tttState.board.at(l.at(0));
+      if (v && v === tttState.board.at(l.at(1)) && v === tttState.board.at(l.at(2))) {
         tttState.over = true;
-        tttState.myTurn = false;
-        line.forEach(idx => {
-          const el = gameContainer.querySelector(`.ttt-cell[data-idx="${idx}"]`);
-          if (el) el.classList.add("win-cell");
-        });
-        finishRound(v === tttState.myMark);
+        finishPartyRound(v === "X" ? tttState.p1 : tttState.p2);
         return;
       }
     }
-    if (!tttState.board.includes("")) {
-      tttState.over = true;
-      finishRound(null, "Ничья! 🤝");
-    }
+    if (!tttState.board.includes("")) { tttState.over = true; finishPartyRound(null, "Ничья! 🤝"); }
   }
-
   // === ЦЕНТРАЛЬНЫЙ СЕТЕВОЙ ОБРАБОТЧИК ===
   function handleNetworkMessage(msg) {
     if (msg.type === "chat") addChatLine(msg.author, msg.text, false);
     if (msg.type === "emote") { spawnFloatingEmote(msg.em); playSFX("pop"); }
-    if (msg.type === "startGame") startGame(msg.game, false);
+    if (msg.type === "startGame") startGame(msg.game, false, msg.players);
     if (msg.type === "backLobby") { stopCurrentGame(); showScreen("screenLobby"); }
 
-    if (msg.type === "pMove" && pState) {
-      pState.enTargetX = msg.x;
+    if (msg.type === "pMove" && pState && pState.cats.has(msg._sender)) {
+      pState.cats.get(msg._sender).targetX = msg.x;
     }
-    if (msg.type === "pSpawn" && pState && !isHost) {
-      pState.items.push(msg.item);
-    }
-    if (msg.type === "pCatch" && pState) {
-      pState.sEn = msg.score;
-      if (msg.pts < 0) pState.enDizzyUntil = Date.now() + 1000;
-      pState.popups.push({
-        x: msg.x,
-        y: 315,
-        text: (msg.pts > 0 ? "+" : "") + msg.pts,
-        color: msg.pts > 0 ? "#ffd43b" : "#ff4757",
-        life: 1.0
-      });
-      roundScoreEl.textContent = `${pState.sMe} : ${pState.sEn}`;
+    if (msg.type === "pSpawn" && pState && !isHost) pState.items.push(msg.item);
+    if (msg.type === "pCatch" && pState && pState.cats.has(msg._sender)) {
+      pState.cats.get(msg._sender).pts = msg.pts;
       const idx = pState.items.findIndex(it => it.id === msg.id);
       if (idx !== -1) pState.items.splice(idx, 1);
+      const arr = Array.from(pState.cats.values());
+      roundScoreEl.textContent = arr.map(c => `${c.nick.slice(0, 4)}:${c.pts}`).join(" ");
     }
 
-    if (msg.type === "pongMove" && pongState) {
-      pongState.enTargetX = msg.x;
+    if (msg.type === "diceRoll" && diceState) applyDiceMove(msg.pid, msg.roll);
+
+    if (msg.type === "bombPass" && bombState) {
+      bombState.holderId = msg.toId;
+      playSFX("pop");
+      if (bombState.render) bombState.render();
     }
-    if (msg.type === "pongSync" && pongState && !isHost) {
-      pongState.bTargetX = msg.bx;
-      pongState.bTargetY = msg.by;
-      if (msg.sMe !== pongState.sMe || msg.sEn !== pongState.sEn) playSFX("goal");
-      pongState.sMe = msg.sMe;
-      pongState.sEn = msg.sEn;
-      roundScoreEl.textContent = `${pongState.sMe} : ${pongState.sEn}`;
-      if (pongState.sMe >= 5 || pongState.sEn >= 5) finishRound(pongState.sMe >= 5);
+    if (msg.type === "bombBoom" && bombState) {
+      const lp = roomPlayers.get(msg.loserId);
+      finishPartyRound(msg.winnerId, `💥 БУМ! Взорвался ${lp ? lp.nick : "игрок"}!`);
     }
 
-    if (msg.type === "hPaddle" && hState) {
-      hState.enTargetX = msg.x;
-      hState.enTargetY = msg.y;
-    }
-    if (msg.type === "hSync" && hState && !isHost) {
-      hState.pTargetX = msg.px;
-      hState.pTargetY = msg.py;
-      if (msg.sMe !== hState.sMe || msg.sEn !== hState.sEn) playSFX("goal");
-      hState.sMe = msg.sMe;
-      hState.sEn = msg.sEn;
-      roundScoreEl.textContent = `${hState.sMe} : ${hState.sEn}`;
-      if (hState.sMe >= 5 || hState.sEn >= 5) finishRound(hState.sMe >= 5);
-    }
-
-    if (msg.type === "rSpawn" && rState) {
-      rState.targetId = msg.id;
-      renderOrb(msg.id, msg.x, msg.y, msg.icon);
-    }
+    if (msg.type === "rSpawn" && rState) { rState.targetId = msg.id; renderOrb(msg.id, msg.x, msg.y, msg.icon); }
     if (msg.type === "rHit" && rState) {
       rState.targetId = -1;
       const arena = document.getElementById("rArena");
       if (arena) arena.innerHTML = "";
-      rState.sEn = msg.sEn;
-      roundScoreEl.textContent = `${rState.sMe} : ${rState.sEn}`;
-      if (rState.sEn >= 10) finishRound(false);
+      rState.scores.set(msg.pid, msg.score);
+      updateReactionScoreBar();
+      if (msg.score >= 10) finishPartyRound(msg.pid);
     }
 
-    if (msg.type === "rpsPick" && rpsState) {
-      rpsState.enPick = msg.pick;
-      resolveRPSRound();
+    if (msg.type === "pongMove" && pongState) {
+      if (msg.slot === 1) pongState.x1 = msg.x; else pongState.x2 = 320 - msg.x;
+    }
+    if (msg.type === "pongSync" && pongState && !isHost) {
+      pongState.bx = msg.bx; pongState.by = msg.by; pongState.s1 = msg.s1; pongState.s2 = msg.s2;
+      roundScoreEl.textContent = `${msg.s1} : ${msg.s2}`;
+      if (msg.s1 >= 5 || msg.s2 >= 5) finishPartyRound(msg.s1 >= 5 ? pongState.p1 : pongState.p2);
     }
 
-    if (msg.type === "tttMove" && tttState) {
-      makeTTTMove(msg.idx, msg.mark, false);
-    }
+    if (msg.type === "tttMove" && tttState) makeTTTMove(msg.idx, msg.mark, false);
   }
 </script>
 
