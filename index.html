@@ -94,6 +94,17 @@
       align-items: center;
     }
 
+    .sound-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: #fff;
+      border-radius: 8px;
+      padding: 2px 6px;
+      font-size: 11px;
+      cursor: pointer;
+      margin-right: 4px;
+    }
+
     .theme-btn {
       width: 15px;
       height: 15px;
@@ -478,6 +489,10 @@
       cursor: pointer;
       animation: popOrb 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
+    .target-orb.bomb {
+      background: linear-gradient(135deg, #ff4757, #2f3542);
+      box-shadow: 0 0 18px #ff4757;
+    }
     @keyframes popOrb {
       from { transform: scale(0.2); }
       to   { transform: scale(1); }
@@ -543,6 +558,7 @@
   <div class="top-bar">
     <div class="logo">🐱 Pusheen Arcade</div>
     <div class="themes">
+      <button class="sound-btn" id="soundToggleBtn" title="Звук">🔊</button>
       <button class="theme-btn active" data-t="pink" title="Розовый"></button>
       <button class="theme-btn" data-t="purple" title="Фиолетовый"></button>
       <button class="theme-btn" data-t="gold" title="Золотой"></button>
@@ -600,8 +616,8 @@
         <div class="g-info">
           <div class="g-icon">🐱</div>
           <div>
-            <div class="g-title">Пушин: Вкусняшки</div>
-            <div class="g-desc">Милый котик ловит пончики и пиццу (25 сек)</div>
+            <div class="g-title">Пушин: Вкусняшки и Бонусы</div>
+            <div class="g-desc">Лови пончики (+1), звёзды (+3) и берегись перца (-2)!</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
@@ -612,7 +628,7 @@
           <div class="g-icon">🏒</div>
           <div>
             <div class="g-title">Неоновый Аэрохоккей</div>
-            <div class="g-desc">1 на 1 в реальном времени до 5 голов</div>
+            <div class="g-desc">Плавная физика 60 FPS со световым следом до 5 голов</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
@@ -622,8 +638,8 @@
         <div class="g-info">
           <div class="g-icon">⚡</div>
           <div>
-            <div class="g-title">Дуэль на реакцию</div>
-            <div class="g-desc">Кто быстрее поймает 10 целей</div>
+            <div class="g-title">Дуэль на реакцию + Бомбы</div>
+            <div class="g-desc">Лови цели (+1) до 10, но не нажимай на 💣 (-1)!</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
@@ -686,6 +702,49 @@
   </div>
 </div>
 <script>
+  // === 1. ВСТРОЕННЫЙ ЗВУКОВОЙ СИНТЕЗАТОР (WEB AUDIO API) ===
+  let soundEnabled = true;
+  let audioCtx = null;
+
+  function playTone(freq, type = "sine", dur = 0.12, vol = 0.12) {
+    if (!soundEnabled) return;
+    try {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + dur);
+    } catch (e) {}
+  }
+
+  function playSFX(kind) {
+    if (kind === "eat")   { playTone(587, "sine", 0.08); setTimeout(() => playTone(880, "sine", 0.12), 60); }
+    if (kind === "star")  { playTone(659, "triangle", 0.08); setTimeout(() => playTone(987, "triangle", 0.08), 55); setTimeout(() => playTone(1318, "triangle", 0.16), 110); }
+    if (kind === "chili") { playTone(180, "sawtooth", 0.22, 0.15); }
+    if (kind === "hit")   { playTone(420, "triangle", 0.07, 0.1); }
+    if (kind === "goal")  { playTone(523, "square", 0.1); setTimeout(() => playTone(659, "square", 0.1), 90); setTimeout(() => playTone(784, "square", 0.22), 180); }
+    if (kind === "pop")   { playTone(740, "sine", 0.07, 0.09); }
+    if (kind === "win")   { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => playTone(f, "triangle", 0.18), i * 95)); }
+    if (kind === "lose")  { [440, 392, 349, 293].forEach((f, i) => setTimeout(() => playTone(f, "sawtooth", 0.18, 0.08), i * 110)); }
+  }
+
+  document.getElementById("soundToggleBtn").addEventListener("click", (e) => {
+    soundEnabled = !soundEnabled;
+    e.target.textContent = soundEnabled ? "🔊" : "🔇";
+    if (soundEnabled) playSFX("pop");
+  });
+
+  // === 2. ТЕМЫ, ФОТО-АВАТАР И СОХРАНЕНИЕ АККАУНТА ===
   const themeBtns = document.querySelectorAll(".theme-btn");
   themeBtns.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -694,6 +753,7 @@
       document.body.className = "";
       const t = btn.getAttribute("data-t");
       if (t !== "pink") document.body.classList.add("theme-" + t);
+      playSFX("pop");
     });
   });
 
@@ -703,8 +763,8 @@
   const customAvaPreview = document.getElementById("customAvaPreview");
 
   let accData = JSON.parse(localStorage.getItem("pusheen_acc_v2") || "null") || {
-    nick: localStorage.getItem("duo_nick") || "",
-    ava: localStorage.getItem("duo_ava") || "🐱",
+    nick: "",
+    ava: "🐱",
     wins: 0,
     games: 0
   };
@@ -772,6 +832,7 @@
   avatarPicker.querySelectorAll(".ava[data-ava]").forEach(el => {
     el.addEventListener("click", () => {
       applySelectedAvatar(el.getAttribute("data-ava"));
+      playSFX("pop");
     });
   });
 
@@ -802,6 +863,7 @@
         ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, 72, 72);
         const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.72);
         applySelectedAvatar(compressedDataUrl);
+        playSFX("eat");
       };
       img.src = ev.target.result;
     };
@@ -819,8 +881,7 @@
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
     document.getElementById(id).classList.add("active");
   }
-
-  // === ЧИСТЫЙ WEBSOCKET-ДВИЖОК БЕЗ ВНЕШНИХ БИБЛИОТЕК ===
+  // === 3. ЧИСТЫЙ WEBSOCKET-ДВИЖОК БЕЗ ВНЕШНИХ СКРИПТОВ ===
   let ws = null;
   let pingTimer = null;
   let isConnected = false;
@@ -846,7 +907,6 @@
     document.getElementById("globalScore").textContent = `${winsMe} : ${winsEnemy}`;
   }
 
-  // Встроенный сборщик MQTT-пакетов поверх стандартного WebSocket
   function encodeVarInt(len) {
     const out = [];
     do {
@@ -864,13 +924,7 @@
   }
 
   function buildConnectPacket(cid) {
-    const body = [
-      0, 4, 77, 81, 84, 84, // "MQTT"
-      4, // уровень протокола 3.1.1
-      2, // Clean Session
-      0, 30, // KeepAlive 30s
-      ...encodeStr(cid)
-    ];
+    const body = [0, 4, 77, 81, 84, 84, 4, 2, 0, 30, ...encodeStr(cid)];
     return new Uint8Array([0x10, ...encodeVarInt(body.length), ...body]);
   }
 
@@ -897,13 +951,13 @@
     if (view.length < 2) return;
     const type = view[0] >> 4;
 
-    // CONNACK (подтверждение подключения к серверу)
     if (type === 2) {
       ws.send(buildSubscribePacket(roomTopic));
       document.getElementById("displayCode").textContent = roomCode;
       statusText.textContent = "";
       updateHeader();
       showScreen("screenLobby");
+      playSFX("eat");
 
       if (!isHost) {
         setTimeout(() => {
@@ -913,13 +967,11 @@
       return;
     }
 
-    // PUBLISH (входящее сообщение от второго игрока)
     if (type === 3) {
       let idx = 1;
-      let mult = 1, remLen = 0, b;
+      let mult = 1, b;
       do {
         b = view[idx++];
-        remLen += (b & 127) * mult;
         mult *= 128;
       } while ((b & 128) !== 0);
 
@@ -936,6 +988,7 @@
           enemyNick = msg.nick;
           enemyAva = msg.ava;
           updateHeader();
+          playSFX("star");
           sendData({ type: "hello", nick: myNick, ava: myAva });
           return;
         }
@@ -945,6 +998,7 @@
           enemyNick = msg.nick;
           enemyAva = msg.ava;
           updateHeader();
+          playSFX("star");
           return;
         }
 
@@ -972,7 +1026,7 @@
         ws.send(buildConnectPacket(myClientId));
         pingTimer = setInterval(() => {
           if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(new Uint8Array([0xC0, 0x00])); // PINGREQ
+            ws.send(new Uint8Array([0xC0, 0x00]));
           }
         }, 20000);
       };
@@ -980,7 +1034,7 @@
       ws.onmessage = (ev) => handleIncomingPacket(ev.data);
 
       ws.onerror = () => {
-        statusText.textContent = "Ошибка соединения. Попробуйте открыть ссылку в обычном браузере (Chrome / Safari).";
+        statusText.textContent = "Ошибка сети. Проверьте интернет и попробуйте снова.";
       };
 
       ws.onclose = () => {
@@ -1031,6 +1085,7 @@
   const chatInput = document.getElementById("chatInput");
   function addChatLine(author, text) {
     chatLog.textContent = `${author}: ${text}`;
+    playSFX("pop");
   }
 
   document.getElementById("chatSendBtn").addEventListener("click", () => {
@@ -1054,6 +1109,7 @@
     btn.addEventListener("click", () => {
       const em = btn.getAttribute("data-em");
       spawnFloatingEmote(em);
+      playSFX("pop");
       sendData({ type: "emote", em });
     });
   });
@@ -1072,8 +1128,8 @@
 
   document.querySelectorAll(".game-card").forEach(card => {
     card.addEventListener("click", () => {
-       if (!isConnected) {
-        alert("Сначала дождитесь подключения второго игрока!");
+      if (!isConnected) {
+        alert("Сначала дождитесь подключения второго игрока по коду или ссылке!");
         return;
       }
       const g = card.getAttribute("data-game");
@@ -1087,12 +1143,14 @@
     if (iWon === true) {
       winsMe++;
       accData.wins++;
+      playSFX("win");
       gameHintEl.textContent = customMsg || "Победа! 🏆";
       for (let i = 0; i < 12; i++) {
         setTimeout(() => spawnFloatingEmote(["🎉", "🐱", "✨", "🍩"].at(i % 4)), i * 80);
       }
     } else if (iWon === false) {
       winsEnemy++;
+      playSFX("lose");
       gameHintEl.textContent = customMsg || "Соперник победил!";
     } else {
       gameHintEl.textContent = customMsg || "Ничья!";
@@ -1120,6 +1178,7 @@
     currentGame = type;
     showScreen("screenGame");
     gameContainer.innerHTML = "";
+    playSFX("pop");
 
     if (type === "pusheen") initPusheen();
     if (type === "hockey") initHockey();
@@ -1128,10 +1187,13 @@
     if (type === "ttt") initTTT(initiator);
   }
 
-  // === ИГРА 1: МИЛЫЙ ПУШИН ЛОВИТ ВКУСНЯШКИ ===
-  function drawPusheenCat(ctx, x, y, colorTint, label) {
+  // === ИГРА 1: ПЛАВНЫЙ ПУШИН С БОНУСАМИ И ПЕРЧИКОМ (60 FPS LERP) ===
+  function drawPusheenCat(ctx, x, y, colorTint, label, dizzy) {
     ctx.save();
     ctx.translate(x, y);
+    if (dizzy) {
+      ctx.rotate(Math.sin(Date.now() * 0.03) * 0.18);
+    }
     ctx.fillStyle = colorTint;
     ctx.beginPath();
     ctx.ellipse(0, 4, 28, 21, 0, 0, Math.PI * 2);
@@ -1143,22 +1205,33 @@
     ctx.fillStyle = "#5c5358";
     ctx.fillRect(-6, -15, 12, 3);
     ctx.fillRect(-4, -10, 8, 3);
+
     ctx.fillStyle = "#1f1b1d";
-    ctx.beginPath();
-    ctx.arc(-10, -2, 2.5, 0, Math.PI * 2);
-    ctx.arc(10, -2, 2.5, 0, Math.PI * 2);
-    ctx.fill();
+    if (dizzy) {
+      ctx.font = "bold 11px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("×", -10, 1);
+      ctx.fillText("×", 10, 1);
+    } else {
+      ctx.beginPath();
+      ctx.arc(-10, -2, 2.5, 0, Math.PI * 2);
+      ctx.arc(10, -2, 2.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     ctx.strokeStyle = "#1f1b1d";
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.arc(-2.5, 1, 2.5, 0, Math.PI);
     ctx.arc(2.5, 1, 2.5, 0, Math.PI);
     ctx.stroke();
+
     ctx.fillStyle = "rgba(255, 112, 184, 0.65)";
     ctx.beginPath();
     ctx.arc(-16, 3, 3.5, 0, Math.PI * 2);
     ctx.arc(16, 3, 3.5, 0, Math.PI * 2);
     ctx.fill();
+
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 10px sans-serif";
     ctx.textAlign = "center";
@@ -1168,7 +1241,7 @@
 
   function initPusheen() {
     roundScoreEl.textContent = "0 : 0";
-    gameHintEl.textContent = "Осталось 25с";
+    gameHintEl.textContent = "Осталось 30с";
     gameContainer.innerHTML = `<canvas id="pusheenCanvas" class="game-canvas" width="320" height="400"></canvas>`;
     const canvas = document.getElementById("pusheenCanvas");
     const ctx = canvas.getContext("2d");
@@ -1176,18 +1249,28 @@
     pState = {
       myX: 160,
       enX: 160,
+      enTargetX: 160,
       items: [],
+      popups: [],
       sMe: 0,
       sEn: 0,
+      myDizzyUntil: 0,
+      enDizzyUntil: 0,
       startTime: Date.now(),
-      lastSpawn: 0
+      lastSpawn: 0,
+      lastNetSend: 0,
+      lastSyncSend: 0
     };
 
     function moveCat(clientX) {
       const rect = canvas.getBoundingClientRect();
       const nx = Math.max(32, Math.min(288, (clientX - rect.left) * (320 / rect.width)));
       pState.myX = nx;
-      sendData({ type: "pMove", x: nx });
+      const now = Date.now();
+      if (now - pState.lastNetSend > 38) {
+        pState.lastNetSend = now;
+        sendData({ type: "pMove", x: Math.round(nx) });
+      }
     }
 
     canvas.addEventListener("touchmove", e => {
@@ -1197,21 +1280,37 @@
       if (e.buttons === 1) moveCat(e.clientX);
     });
 
+    function addScorePopup(x, y, text, color) {
+      pState.popups.push({ x, y, text, color, life: 1.0 });
+    }
+
     function loop() {
       if (currentGame !== "pusheen") return;
       const now = Date.now();
-      const leftSec = Math.max(0, 25 - Math.floor((now - pState.startTime) / 1000));
+      const leftSec = Math.max(0, 30 - Math.floor((now - pState.startTime) / 1000));
       gameHintEl.textContent = `Осталось ${leftSec}с`;
 
+      pState.enX += (pState.enTargetX - pState.enX) * 0.28;
+
       if (isHost) {
-        if (now - pState.lastSpawn > 650) {
+        if (now - pState.lastSpawn > 580) {
           pState.lastSpawn = now;
-          const foods = ["🍩", "🍕", "🍓", "🧁", "🥜"];
+          const pool = [
+            { icon: "🍩", pts: 1, sfx: "eat", color: "#ff85c0" },
+            { icon: "🍕", pts: 1, sfx: "eat", color: "#ffd43b" },
+            { icon: "🍰", pts: 2, sfx: "eat", color: "#c084fc" },
+            { icon: "⭐", pts: 3, sfx: "star", color: "#ffe066" },
+            { icon: "🌶️", pts: -2, sfx: "chili", color: "#ff4757" }
+          ];
+          const pick = pool.at(Math.floor(Math.random() * pool.length));
           pState.items.push({
             x: 24 + Math.random() * 272,
             y: -15,
-            vy: 2.6 + Math.random() * 1.8,
-            icon: foods.at(Math.floor(Math.random() * foods.length))
+            vy: 2.8 + Math.random() * 1.9,
+            icon: pick.icon,
+            pts: pick.pts,
+            sfx: pick.sfx,
+            color: pick.color
           });
         }
 
@@ -1219,13 +1318,18 @@
           const it = pState.items[i];
           it.y += it.vy;
           if (it.y > 325 && it.y < 368) {
-            if (Math.abs(it.x - pState.myX) < 34) {
-              pState.sMe++;
+            if (Math.abs(it.x - pState.myX) < 35) {
+              pState.sMe = Math.max(0, pState.sMe + it.pts);
+              playSFX(it.sfx);
+              if (it.pts < 0) pState.myDizzyUntil = now + 1100;
+              addScorePopup(pState.myX, 315, (it.pts > 0 ? "+" : "") + it.pts, it.color);
               pState.items.splice(i, 1);
               continue;
             }
-            if (Math.abs(it.x - pState.enX) < 34) {
-              pState.sEn++;
+            if (Math.abs(it.x - pState.enX) < 35) {
+              pState.sEn = Math.max(0, pState.sEn + it.pts);
+              if (it.pts < 0) pState.enDizzyUntil = now + 1100;
+              addScorePopup(pState.enX, 315, (it.pts > 0 ? "+" : "") + it.pts, it.color);
               pState.items.splice(i, 1);
               continue;
             }
@@ -1234,19 +1338,27 @@
         }
 
         roundScoreEl.textContent = `${pState.sMe} : ${pState.sEn}`;
-        sendData({
-          type: "pSync",
-          items: pState.items,
-          sMe: pState.sEn,
-          sEn: pState.sMe,
-          leftSec
-        });
+
+        if (now - pState.lastSyncSend > 55) {
+          pState.lastSyncSend = now;
+          sendData({
+            type: "pSync",
+            items: pState.items.map(it => ({ x: Math.round(it.x), y: Math.round(it.y), vy: it.vy, icon: it.icon })),
+            sMe: pState.sEn,
+            sEn: pState.sMe,
+            myDizzy: pState.enDizzyUntil > now,
+            enDizzy: pState.myDizzyUntil > now,
+            leftSec
+          });
+        }
 
         if (leftSec <= 0) {
           if (pState.sMe === pState.sEn) finishRound(null, "Дружеская ничья! 🍩");
           else finishRound(pState.sMe > pState.sEn, pState.sMe > pState.sEn ? "Пушин объелся! 🏆" : "Соперник поймал больше!");
           return;
         }
+      } else {
+        pState.items.forEach(it => { it.y += (it.vy || 3.2); });
       }
 
       ctx.clearRect(0, 0, 320, 400);
@@ -1259,16 +1371,31 @@
         ctx.fillText(it.icon, it.x, it.y);
       });
 
-      ctx.globalAlpha = 0.72;
-      drawPusheenCat(ctx, pState.enX, 346, "#ffd43b", enemyNick);
+      ctx.globalAlpha = 0.76;
+      drawPusheenCat(ctx, pState.enX, 346, "#ffd43b", enemyNick, pState.enDizzyUntil > now);
       ctx.globalAlpha = 1;
-      drawPusheenCat(ctx, pState.myX, 346, "#b8aeb3", myNick);
+      drawPusheenCat(ctx, pState.myX, 346, "#b8aeb3", myNick, pState.myDizzyUntil > now);
+
+      for (let i = pState.popups.length - 1; i >= 0; i--) {
+        const pop = pState.popups[i];
+        pop.y -= 1.1;
+        pop.life -= 0.03;
+        if (pop.life <= 0) {
+          pState.popups.splice(i, 1);
+          continue;
+        }
+        ctx.globalAlpha = pop.life;
+        ctx.fillStyle = pop.color;
+        ctx.font = "bold 16px sans-serif";
+        ctx.fillText(pop.text, pop.x, pop.y);
+        ctx.globalAlpha = 1;
+      }
 
       gameLoopId = requestAnimationFrame(loop);
     }
     loop();
   }
-  // === ИГРА 2: НЕОНОВЫЙ АЭРОХОККЕЙ ===
+  // === ИГРА 2: НЕОНОВЫЙ АЭРОХОККЕЙ СО СЛЕДОМ И ИНТЕРПОЛЯЦИЕЙ ===
   function initHockey() {
     gameHintEl.textContent = "До 5 голов";
     roundScoreEl.textContent = "0 : 0";
@@ -1279,9 +1406,14 @@
     hState = {
       myX: 160, myY: 350,
       enX: 160, enY: 60,
+      enTargetX: 160, enTargetY: 60,
       px: 160, py: 205,
+      pTargetX: 160, pTargetY: 205,
+      trail: [],
       vx: isHost ? 3.2 : 0, vy: isHost ? 4.1 : 0,
-      sMe: 0, sEn: 0
+      sMe: 0, sEn: 0,
+      lastNetSend: 0,
+      lastSyncSend: 0
     };
 
     function movePaddle(clientX, clientY) {
@@ -1292,7 +1424,12 @@
       ny = Math.max(229, Math.min(384, ny));
       hState.myX = nx;
       hState.myY = ny;
-      sendData({ type: "hPaddle", x: 320 - nx, y: 410 - ny });
+
+      const now = Date.now();
+      if (now - hState.lastNetSend > 35) {
+        hState.lastNetSend = now;
+        sendData({ type: "hPaddle", x: Math.round(320 - nx), y: Math.round(410 - ny) });
+      }
     }
 
     canvas.addEventListener("touchmove", e => {
@@ -1305,16 +1442,27 @@
     function resetPuck(dir) {
       hState.px = 160;
       hState.py = 205;
+      hState.pTargetX = 160;
+      hState.pTargetY = 205;
+      hState.trail = [];
       hState.vx = (Math.random() * 4 - 2);
       hState.vy = 4.2 * dir;
     }
 
     function loop() {
       if (currentGame !== "hockey") return;
+      const now = Date.now();
+
+      hState.enX += (hState.enTargetX - hState.enX) * 0.32;
+      hState.enY += (hState.enTargetY - hState.enY) * 0.32;
+
       if (isHost) {
         hState.px += hState.vx;
         hState.py += hState.vy;
-        if (hState.px < 16 || hState.px > 304) hState.vx *= -1;
+        if (hState.px < 16 || hState.px > 304) {
+          hState.vx *= -1;
+          playSFX("hit");
+        }
 
         [{ x: hState.myX, y: hState.myY }, { x: hState.enX, y: hState.enY }].forEach(p => {
           const dx = hState.px - p.x;
@@ -1322,37 +1470,62 @@
           const dist = Math.hypot(dx, dy);
           if (dist < 38 && dist > 0) {
             const angle = Math.atan2(dy, dx);
-            const speed = Math.min(Math.hypot(hState.vx, hState.vy) + 0.35, 8.5);
+            const speed = Math.min(Math.hypot(hState.vx, hState.vy) + 0.35, 8.8);
             hState.vx = Math.cos(angle) * speed;
             hState.vy = Math.sin(angle) * speed;
             hState.px = p.x + Math.cos(angle) * 39;
             hState.py = p.y + Math.sin(angle) * 39;
+            playSFX("hit");
           }
         });
 
         if (hState.py < 12) {
-          if (hState.px > 100 && hState.px < 220) { hState.sMe++; resetPuck(1); }
-          else { hState.vy *= -1; hState.py = 14; }
+          if (hState.px > 100 && hState.px < 220) {
+            hState.sMe++;
+            playSFX("goal");
+            resetPuck(1);
+          } else {
+            hState.vy *= -1;
+            hState.py = 14;
+            playSFX("hit");
+          }
         }
         if (hState.py > 398) {
-          if (hState.px > 100 && hState.px < 220) { hState.sEn++; resetPuck(-1); }
-          else { hState.vy *= -1; hState.py = 396; }
+          if (hState.px > 100 && hState.px < 220) {
+            hState.sEn++;
+            playSFX("goal");
+            resetPuck(-1);
+          } else {
+            hState.vy *= -1;
+            hState.py = 396;
+            playSFX("hit");
+          }
         }
 
         roundScoreEl.textContent = `${hState.sMe} : ${hState.sEn}`;
-        sendData({
-          type: "hSync",
-          px: 320 - hState.px,
-          py: 410 - hState.py,
-          sMe: hState.sEn,
-          sEn: hState.sMe
-        });
+
+        if (now - hState.lastSyncSend > 38) {
+          hState.lastSyncSend = now;
+          sendData({
+            type: "hSync",
+            px: Math.round(320 - hState.px),
+            py: Math.round(410 - hState.py),
+            sMe: hState.sEn,
+            sEn: hState.sMe
+          });
+        }
 
         if (hState.sMe >= 5 || hState.sEn >= 5) {
           finishRound(hState.sMe >= 5);
           return;
         }
+      } else {
+        hState.px += (hState.pTargetX - hState.px) * 0.42;
+        hState.py += (hState.pTargetY - hState.py) * 0.42;
       }
+
+      hState.trail.push({ x: hState.px, y: hState.py });
+      if (hState.trail.length > 8) hState.trail.shift();
 
       ctx.clearRect(0, 0, 320, 410);
       ctx.strokeStyle = "rgba(255,255,255,0.12)";
@@ -1362,6 +1535,13 @@
       ctx.fillStyle = "#ff70b8";
       ctx.fillRect(100, 0, 120, 5);
       ctx.fillRect(100, 405, 120, 5);
+
+      hState.trail.forEach((pt, idx) => {
+        ctx.fillStyle = `rgba(255, 255, 255, ${(idx + 1) * 0.04})`;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 12 * ((idx + 1) / 8), 0, Math.PI * 2);
+        ctx.fill();
+      });
 
       ctx.fillStyle = "#ffd43b";
       ctx.beginPath(); ctx.arc(hState.enX, hState.enY, 22, 0, Math.PI * 2); ctx.fill();
@@ -1375,31 +1555,39 @@
     loop();
   }
 
-  // === ИГРА 3: ДУЭЛЬ НА РЕАКЦИЮ ===
+  // === ИГРА 3: ДУЭЛЬ НА РЕАКЦИЮ С БОМБАМИ ===
   function initReaction(initiator) {
-    gameHintEl.textContent = "Кто быстрее 10!";
+    gameHintEl.textContent = "До 10! Осторожно 💣";
     roundScoreEl.textContent = "0 : 0";
     gameContainer.innerHTML = `<div class="reaction-arena" id="rArena"></div>`;
-    rState = { sMe: 0, sEn: 0, targetId: 0 };
+    rState = { sMe: 0, sEn: 0, targetId: 0, bombTimer: null };
     if (initiator) spawnReactionTarget();
   }
 
   function spawnReactionTarget() {
-    const icons = ["♥", "🥜", "✦", "⚡", "👑"];
+    if (currentGame !== "reaction") return;
+    if (rState.bombTimer) clearTimeout(rState.bombTimer);
+
+    const icons = ["♥", "🥜", "✦", "👑", "💣"];
     const tx = Math.floor(10 + Math.random() * 72);
     const ty = Math.floor(10 + Math.random() * 72);
     const icon = icons.at(Math.floor(Math.random() * icons.length));
     rState.targetId++;
     renderOrb(rState.targetId, tx, ty, icon);
     sendData({ type: "rSpawn", id: rState.targetId, x: tx, y: ty, icon });
+
+    if (icon === "💣" && isHost) {
+      rState.bombTimer = setTimeout(spawnReactionTarget, 1300);
+    }
   }
 
   function renderOrb(id, xPct, yPct, icon) {
     const arena = document.getElementById("rArena");
     if (!arena) return;
     arena.innerHTML = "";
+    const isBomb = icon === "💣";
     const orb = document.createElement("div");
-    orb.className = "target-orb";
+    orb.className = "target-orb" + (isBomb ? " bomb" : "");
     orb.textContent = icon;
     orb.style.left = xPct + "%";
     orb.style.top = yPct + "%";
@@ -1407,11 +1595,17 @@
       if (rState.targetId !== id) return;
       rState.targetId = -1;
       arena.innerHTML = "";
-      rState.sMe++;
+      if (isBomb) {
+        rState.sMe = Math.max(0, rState.sMe - 1);
+        playSFX("chili");
+      } else {
+        rState.sMe++;
+        playSFX("eat");
+      }
       roundScoreEl.textContent = `${rState.sMe} : ${rState.sEn}`;
-      sendData({ type: "rHit", sEn: rState.sMe });
+      sendData({ type: "rHit", sEn: rState.sMe, bomb: isBomb });
       if (rState.sMe >= 10) finishRound(true);
-      else setTimeout(spawnReactionTarget, 350);
+      else setTimeout(spawnReactionTarget, 320);
     });
     arena.appendChild(orb);
   }
@@ -1440,6 +1634,7 @@
       btn.addEventListener("click", () => {
         if (rpsState.myPick) return;
         rpsState.myPick = btn.getAttribute("data-p");
+        playSFX("pop");
         document.getElementById("rpsMeView").textContent = rpsState.myPick;
         document.getElementById("rpsStatus").textContent = "Ждём выбор соперника...";
         sendData({ type: "rpsPick", pick: rpsState.myPick });
@@ -1456,6 +1651,7 @@
 
     if (m === e) {
       document.getElementById("rpsStatus").textContent = "Ничья в раунде!";
+      playSFX("hit");
     } else if (
       (m === "🪨" && e === "✂️") ||
       (m === "✂️" && e === "📄") ||
@@ -1463,9 +1659,11 @@
     ) {
       rpsState.sMe++;
       document.getElementById("rpsStatus").textContent = "Ты забрал раунд!";
+      playSFX("eat");
     } else {
       rpsState.sEn++;
       document.getElementById("rpsStatus").textContent = "Раунд за соперником!";
+      playSFX("chili");
     }
 
     roundScoreEl.textContent = `${rpsState.sMe} : ${rpsState.sEn}`;
@@ -1483,7 +1681,6 @@
       }, 1400);
     }
   }
-
   // === ИГРА 5: КРЕСТИКИ-НОЛИКИ ===
   function initTTT(initiator) {
     const myMark = initiator ? "X" : "O";
@@ -1508,6 +1705,7 @@
 
   function makeTTTMove(idx, mark, local) {
     tttState.board[idx] = mark;
+    playSFX("pop");
     const cell = gameContainer.querySelector(`.ttt-cell[data-idx="${idx}"]`);
     if (cell) {
       cell.textContent = mark;
@@ -1525,7 +1723,10 @@
   }
 
   function checkTTTWin() {
-    const wins = [,,,,,,,];
+    const wins = [, [3, 4, 5], [6, 7, 8],
+, [1, 4, 7], [2, 5, 8],
+, [2, 4, 6]
+    ];
     for (const [a, b, c] of wins) {
       const v = tttState.board.at(a);
       if (v && v === tttState.board.at(b) && v === tttState.board.at(c)) {
@@ -1538,24 +1739,25 @@
       finishRound(null, "Ничья! 🤝");
     }
   }
+
   // === ЦЕНТРАЛЬНЫЙ СЕТЕВОЙ ОБРАБОТЧИК ===
   function handleNetworkMessage(msg) {
-    if (msg.type === "hello") {
-      enemyNick = msg.nick;
-      enemyAva = msg.ava;
-      updateHeader();
-    }
     if (msg.type === "chat") addChatLine(msg.author, msg.text);
-    if (msg.type === "emote") spawnFloatingEmote(msg.em);
+    if (msg.type === "emote") { spawnFloatingEmote(msg.em); playSFX("pop"); }
     if (msg.type === "startGame") startGame(msg.game, false);
     if (msg.type === "backLobby") { stopCurrentGame(); showScreen("screenLobby"); }
 
-    // Пушин
-    if (msg.type === "pMove" && pState) pState.enX = msg.x;
+    // Плавный Пушин
+    if (msg.type === "pMove" && pState) {
+      pState.enTargetX = msg.x;
+    }
     if (msg.type === "pSync" && pState && !isHost) {
       pState.items = msg.items;
+      if (msg.sMe > pState.sMe) playSFX("eat");
       pState.sMe = msg.sMe;
       pState.sEn = msg.sEn;
+      if (msg.myDizzy) pState.myDizzyUntil = Date.now() + 800;
+      if (msg.enDizzy) pState.enDizzyUntil = Date.now() + 800;
       roundScoreEl.textContent = `${pState.sMe} : ${pState.sEn}`;
       gameHintEl.textContent = `Осталось ${msg.leftSec}с`;
       if (msg.leftSec <= 0) {
@@ -1564,18 +1766,22 @@
       }
     }
 
-    // Аэрохоккей
-    if (msg.type === "hPaddle" && hState) { hState.enX = msg.x; hState.enY = msg.y; }
+    // Плавный Аэрохоккей
+    if (msg.type === "hPaddle" && hState) {
+      hState.enTargetX = msg.x;
+      hState.enTargetY = msg.y;
+    }
     if (msg.type === "hSync" && hState && !isHost) {
-      hState.px = msg.px;
-      hState.py = msg.py;
+      hState.pTargetX = msg.px;
+      hState.pTargetY = msg.py;
+      if (msg.sMe !== hState.sMe || msg.sEn !== hState.sEn) playSFX("goal");
       hState.sMe = msg.sMe;
       hState.sEn = msg.sEn;
       roundScoreEl.textContent = `${hState.sMe} : ${hState.sEn}`;
       if (hState.sMe >= 5 || hState.sEn >= 5) finishRound(hState.sMe >= 5);
     }
 
-    // Реакция
+    // Дуэль на реакцию с бомбами
     if (msg.type === "rSpawn" && rState) {
       rState.targetId = msg.id;
       renderOrb(msg.id, msg.x, msg.y, msg.icon);
