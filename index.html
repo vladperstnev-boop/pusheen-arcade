@@ -831,11 +831,11 @@
     if (kind === "goal")  { playTone(523, "square", 0.09); setTimeout(() => playTone(784, "square", 0.18), 100); }
     if (kind === "pop")   { playTone(720, "sine", 0.06, 0.08); }
     if (kind === "win")   {
-      const winNotes =;
+      const winNotes = new Array(523, 659, 784, 1046);
       winNotes.forEach((f, i) => setTimeout(() => playTone(f, "triangle", 0.16), i * 90));
     }
     if (kind === "lose")  {
-      const loseNotes =;
+      const loseNotes = new Array(392, 330, 262);
       loseNotes.forEach((f, i) => setTimeout(() => playTone(f, "sawtooth", 0.16, 0.08), i * 105));
     }
   }
@@ -1036,7 +1036,7 @@
   }
 
   function encodeVarInt(len) {
-    const out = [];
+    const out = new Array();
     do {
       let byte = len % 128;
       len = Math.floor(len / 128);
@@ -1048,23 +1048,23 @@
 
   function encodeStr(str) {
     const bytes = new TextEncoder().encode(str);
-    return [(bytes.length >> 8) & 255, bytes.length & 255, ...bytes];
+    return new Array((bytes.length >> 8) & 255, bytes.length & 255, ...bytes);
   }
 
   function buildConnectPacket(cid) {
-    const body = [0, 4, 77, 81, 84, 84, 4, 2, 0, 30, ...encodeStr(cid)];
-    return new Uint8Array([0x10, ...encodeVarInt(body.length), ...body]);
+    const body = new Array(0, 4, 77, 81, 84, 84, 4, 2, 0, 30, ...encodeStr(cid));
+    return new Uint8Array(new Array(0x10, ...encodeVarInt(body.length), ...body));
   }
 
   function buildSubscribePacket(topic) {
-    const body = [0, 1, ...encodeStr(topic), 0];
-    return new Uint8Array([0x82, ...encodeVarInt(body.length), ...body]);
+    const body = new Array(0, 1, ...encodeStr(topic), 0);
+    return new Uint8Array(new Array(0x82, ...encodeVarInt(body.length), ...body));
   }
 
   function buildPublishPacket(topic, payloadStr) {
     const pBytes = new TextEncoder().encode(payloadStr);
-    const body = [...encodeStr(topic), ...pBytes];
-    return new Uint8Array([0x30, ...encodeVarInt(body.length), ...body]);
+    const body = new Array(...encodeStr(topic), ...pBytes);
+    return new Uint8Array(new Array(0x30, ...encodeVarInt(body.length), ...body));
   }
 
   function sendData(payload) {
@@ -1077,7 +1077,7 @@
   function handleIncomingPacket(buf) {
     const view = new Uint8Array(buf);
     if (view.length < 2) return;
-    const type = view >> 4;
+    const type = view.at(0) >> 4;
 
     if (type === 2) {
       ws.send(buildSubscribePacket(roomTopic));
@@ -1097,13 +1097,12 @@
 
     if (type === 3) {
       let idx = 1;
-      let mult = 1, b;
+      let b;
       do {
-        b = view[idx++];
-        mult *= 128;
+        b = view.at(idx++);
       } while ((b & 128) !== 0);
 
-      const tLen = (view[idx] << 8) | view[idx + 1];
+      const tLen = (view.at(idx) << 8) | view.at(idx + 1);
       idx += 2 + tLen;
       const jsonStr = new TextDecoder().decode(view.slice(idx));
 
@@ -1153,7 +1152,7 @@
         ws.send(buildConnectPacket(myClientId));
         pingTimer = setInterval(() => {
           if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(new Uint8Array([0xC0, 0x00]));
+            ws.send(new Uint8Array(new Array(0xC0, 0x00)));
           }
         }, 20000);
       };
@@ -1273,8 +1272,9 @@
       accData.wins++;
       playSFX("win");
       gameHintEl.textContent = customMsg || "Победа! 🏆";
+      const celeb = new Array("🎉", "🐱", "✨", "🍩");
       for (let i = 0; i < 10; i++) {
-        setTimeout(() => spawnFloatingEmote(["🎉", "🐱", "✨", "🍩"].at(i % 4)), i * 80);
+        setTimeout(() => spawnFloatingEmote(celeb.at(i % 4)), i * 80);
       }
     } else if (iWon === false) {
       winsEnemy++;
@@ -1366,8 +1366,8 @@
       myX: 160,
       enX: 160,
       enTargetX: 160,
-      items: [],
-      popups: [],
+      items: new Array(),
+      popups: new Array(),
       sMe: 0,
       sEn: 0,
       myDizzyUntil: 0,
@@ -1410,13 +1410,13 @@
 
       if (isHost && now - pState.lastSpawn > 650 && leftSec > 1) {
         pState.lastSpawn = now;
-        const pool = [
+        const pool = new Array(
           { icon: "🍩", pts: 1, sfx: "eat", color: "#ff85c0", glow: "rgba(255,112,184,0.35)" },
           { icon: "🍕", pts: 1, sfx: "eat", color: "#ffd43b", glow: "rgba(255,212,59,0.35)" },
           { icon: "🍰", pts: 2, sfx: "eat", color: "#c084fc", glow: "rgba(192,132,252,0.35)" },
           { icon: "⭐", pts: 3, sfx: "star", color: "#ffe066", glow: "rgba(255,224,102,0.45)" },
           { icon: "🌶️", pts: -2, sfx: "chili", color: "#ff4757", glow: "rgba(255,71,87,0.4)" }
-        ];
+        );
         const pick = pool.at(Math.floor(Math.random() * pool.length));
         const item = {
           id: pState.nextId++,
@@ -1434,7 +1434,7 @@
       }
 
       for (let i = pState.items.length - 1; i >= 0; i--) {
-        const it = pState.items[i];
+        const it = pState.items.at(i);
         it.y += it.vy;
 
         if (it.y > 322 && it.y < 368 && Math.abs(it.x - pState.myX) < 36) {
@@ -1478,7 +1478,7 @@
       drawPusheenCat(ctx, pState.myX, 346, "#b8aeb3", myNick, pState.myDizzyUntil > now);
 
       for (let i = pState.popups.length - 1; i >= 0; i--) {
-        const pop = pState.popups[i];
+        const pop = pState.popups.at(i);
         pop.y -= 1.1;
         pop.life -= 0.03;
         if (pop.life <= 0) { pState.popups.splice(i, 1); continue; }
@@ -1600,10 +1600,10 @@
       }
 
       ctx.clearRect(0, 0, 320, 400);
-      ctx.strokeStyle = "rgba(255,255,255,0.1)";
-      ctx.setLineDash([6, 6]);
+      ctx.strokeStyle = "rgba(255,255,255,0.12)";
+      ctx.setLineDash(new Array(6, 6));
       ctx.beginPath(); ctx.moveTo(0, 200); ctx.lineTo(320, 200); ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.setLineDash(new Array());
 
       ctx.fillStyle = "#ffd43b";
       ctx.fillRect(pongState.enX - 40, 24, 80, 10);
@@ -1681,7 +1681,8 @@
         hState.py += hState.vy;
         if (hState.px < 16 || hState.px > 304) { hState.vx *= -1; playSFX("hit"); }
 
-        [{ x: hState.myX, y: hState.myY }, { x: hState.enX, y: hState.enY }].forEach(p => {
+        const paddles = new Array({ x: hState.myX, y: hState.myY }, { x: hState.enX, y: hState.enY });
+        paddles.forEach(p => {
           const dx = hState.px - p.x;
           const dy = hState.py - p.y;
           const dist = Math.hypot(dx, dy);
@@ -1760,7 +1761,7 @@
     if (currentGame !== "reaction") return;
     if (rState.bombTimer) clearTimeout(rState.bombTimer);
 
-    const icons = ["♥", "🥜", "✦", "👑", "💣"];
+    const icons = new Array("♥", "🥜", "✦", "👑", "💣");
     const tx = Math.floor(10 + Math.random() * 72);
     const ty = Math.floor(10 + Math.random() * 72);
     const icon = icons.at(Math.floor(Math.random() * icons.length));
@@ -1873,7 +1874,7 @@
       }, 1300);
     }
   }
-  // === ИГРА 6: КРЕСТИКИ-НОЛИКИ ===
+  // === ИГРА 6: КРЕСТИКИ-НОЛИКИ (ИСПРАВЛЕНЫ ВСЕ 8 ЛИНИЙ ПОБЕДЫ) ===
   function initTTT(initiator) {
     const myMark = initiator ? "X" : "O";
     tttState = { board: Array(9).fill(""), myMark, myTurn: initiator, over: false };
@@ -1887,7 +1888,7 @@
       cell.className = "ttt-cell";
       cell.dataset.idx = i;
       cell.addEventListener("click", () => {
-        if (tttState.over || !tttState.myTurn || tttState.board[i] !== "") return;
+        if (tttState.over || !tttState.myTurn || tttState.board.at(i) !== "") return;
         makeTTTMove(i, tttState.myMark, true);
       });
       grid.appendChild(cell);
@@ -1916,16 +1917,26 @@
   }
 
   function checkTTTWin() {
-    const winLines = [, [3, 4, 5], [6, 7, 8],
-, [1, 4, 7], [2, 5, 8],
-, [2, 4, 6]
-    ];
-    for (const [a, b, c] of winLines) {
-      const v = tttState.board[a];
-      if (v !== "" && v === tttState.board[b] && v === tttState.board[c]) {
+    const winLines = new Array(
+      new Array(0, 1, 2),
+      new Array(3, 4, 5),
+      new Array(6, 7, 8),
+      new Array(0, 3, 6),
+      new Array(1, 4, 7),
+      new Array(2, 5, 8),
+      new Array(0, 4, 8),
+      new Array(2, 4, 6)
+    );
+    for (let i = 0; i < winLines.length; i++) {
+      const line = winLines.at(i);
+      const a = line.at(0);
+      const b = line.at(1);
+      const c = line.at(2);
+      const v = tttState.board.at(a);
+      if (v !== "" && v === tttState.board.at(b) && v === tttState.board.at(c)) {
         tttState.over = true;
         tttState.myTurn = false;
-        [a, b, c].forEach(idx => {
+        line.forEach(idx => {
           const el = gameContainer.querySelector(`.ttt-cell[data-idx="${idx}"]`);
           if (el) el.classList.add("win-cell");
         });
