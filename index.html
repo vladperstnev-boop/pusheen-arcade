@@ -62,7 +62,6 @@
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-
     .app-box {
       position: relative;
       width: 100%;
@@ -474,6 +473,7 @@
       border-radius: 8px;
       flex-shrink: 0;
     }
+
     .chat-history {
       height: 68px;
       overflow-y: auto;
@@ -526,7 +526,6 @@
       20%  { opacity: 1; transform: translateY(0) scale(1.1); }
       100% { opacity: 0; transform: translateY(-90px) scale(1); }
     }
-
     .game-topbar {
       display: flex;
       align-items: center;
@@ -600,55 +599,57 @@
       border-radius: 18px;
     }
 
+    .dice-scene {
+      width: 72px;
+      height: 72px;
+      margin: 12px auto 16px;
+      perspective: 600px;
+    }
+    .dice-cube {
+      width: 72px;
+      height: 72px;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateX(-20deg) rotateY(25deg);
+      transition: transform 1.65s cubic-bezier(0.15, 0.88, 0.25, 1.04);
+    }
+    .dice-face {
+      position: absolute;
+      inset: 0;
+      width: 72px;
+      height: 72px;
+      background: #1b1b2b;
+      border: 2.5px solid var(--accent);
+      border-radius: 14px;
+      box-shadow: inset 0 0 14px rgba(255, 110, 180, 0.28);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 9px;
+      align-items: center;
+      justify-items: center;
+    }
+    .pip {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ffd43b;
+      box-shadow: 0 0 7px #ffd43b;
+    }
+    .f-1 { transform: rotateY(0deg) translateZ(36px); }
+    .f-6 { transform: rotateY(180deg) translateZ(36px); }
+    .f-3 { transform: rotateY(90deg) translateZ(36px); }
+    .f-4 { transform: rotateY(-90deg) translateZ(36px); }
+    .f-2 { transform: rotateX(90deg) translateZ(36px); }
+    .f-5 { transform: rotateX(-90deg) translateZ(36px); }
+
     .dice-track { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
     .track-row { background: rgba(255, 255, 255, 0.05); border-radius: 10px; padding: 6px 8px; text-align: left; }
     .track-bar { height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 6px; margin-top: 4px; overflow: hidden; }
     .track-fill { height: 100%; background: var(--grad-main); width: 0%; transition: width 0.35s ease; }
 
-    /* === 3D-КУБИК СО ВСЕМИ 6 ГРАНЯМИ === */
-    .dice-scene {
-      width: 68px;
-      height: 68px;
-      margin: 8px auto 14px;
-      perspective: 400px;
-    }
-    .dice-cube {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: transform 0.85s cubic-bezier(0.2, 0.9, 0.3, 1.15);
-    }
-    .dice-face {
-      position: absolute;
-      width: 68px;
-      height: 68px;
-      background: linear-gradient(145deg, #1e1e2e, #12121c);
-      border: 2px solid var(--accent);
-      border-radius: 14px;
-      box-shadow: inset 0 0 12px var(--accent-soft);
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      padding: 8px;
-      align-items: center;
-      justify-items: center;
-    }
-    .pip {
-      width: 11px;
-      height: 11px;
-      border-radius: 50%;
-      background: var(--accent2);
-      box-shadow: 0 0 6px var(--accent2);
-    }
-    .f-1 { transform: rotateY(0deg) translateZ(34px); }
-    .f-6 { transform: rotateY(180deg) translateZ(34px); }
-    .f-3 { transform: rotateY(90deg) translateZ(34px); }
-    .f-4 { transform: rotateY(-90deg) translateZ(34px); }
-    .f-2 { transform: rotateX(90deg) translateZ(34px); }
-    .f-5 { transform: rotateX(-90deg) translateZ(34px); }
-
-    /* === УЛУЧШЕННАЯ ГОРЯЧАЯ БОМБА === */
     .bomb-arena-wrap {
       background: #0b0b12;
       border: 1.5px solid var(--accent-border);
@@ -661,20 +662,16 @@
       box-shadow: 0 0 22px rgba(255, 71, 87, 0.35);
     }
     .bomb-core {
-      font-size: 52px;
+      font-size: 50px;
       display: inline-block;
-      margin: 4px 0;
+      margin: 2px 0;
       animation: bombShake 0.35s infinite alternate;
     }
     @keyframes bombShake {
       from { transform: rotate(-7deg) scale(0.95); }
       to   { transform: rotate(7deg) scale(1.08); }
     }
-    .bomb-skills {
-      display: flex;
-      gap: 6px;
-      margin: 10px 0 8px;
-    }
+    .bomb-skills { display: flex; gap: 6px; margin: 8px 0; }
     .skill-btn {
       flex: 1;
       background: rgba(255, 255, 255, 0.07);
@@ -687,6 +684,56 @@
       cursor: pointer;
     }
     .skill-btn:disabled { opacity: 0.35; cursor: default; }
+
+    .wire-box {
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px dashed var(--accent-border);
+      border-radius: 14px;
+      padding: 8px;
+      margin: 8px 0;
+    }
+    .wire-grid {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-top: 6px;
+    }
+    .wire-col { display: flex; flex-direction: column; gap: 7px; width: 45%; }
+    .wire-node {
+      padding: 8px 6px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      color: #111;
+      border: 2px solid transparent;
+      cursor: pointer;
+    }
+    .wire-node.selected { border-color: #ffffff; transform: scale(1.05); box-shadow: 0 0 10px #ffffff; }
+    .wire-node.done { opacity: 0.32; pointer-events: none; }
+
+    .ttt-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-width: 280px;
+      margin: 12px auto;
+    }
+    .ttt-cell {
+      aspect-ratio: 1 / 1;
+      background: #0b0b12;
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .ttt-cell.x { color: #ff70b8; }
+    .ttt-cell.o { color: #ffd43b; }
+    .ttt-cell.win-cell { border-color: #55efc4; background: rgba(85, 239, 196, 0.18); }
   </style>
 </head>
 <body>
@@ -761,7 +808,7 @@
           <div class="g-icon">🎲</div>
           <div>
             <div class="g-title">Гонка Кубиков (2–4 игрока)</div>
-            <div class="g-desc">Кидай кубик и первым добеги до 25 очков!</div>
+            <div class="g-desc">3D-кубик со всеми гранями и бонусные клетки до 25!</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
@@ -772,7 +819,7 @@
           <div class="g-icon">💣</div>
           <div>
             <div class="g-title">Горячая Бомба (2–4 игрока)</div>
-            <div class="g-desc">Перекинь тикающую бомбу другому, пока не рванула!</div>
+            <div class="g-desc">Соедини 3 провода и перекинь бомбу до взрыва!</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
@@ -839,7 +886,6 @@
       <button class="emote-btn" data-em="🔥">🔥</button>
     </div>
   </div>
-
   <!-- ЭКРАН 3: ИГРОВАЯ АРЕНА -->
   <div class="screen" id="screenGame">
     <div class="game-topbar">
@@ -1393,7 +1439,7 @@
 
     isHost = hostMode;
     roomCode = code;
-    roomTopic = "pusheen_party_v5/" + code;
+    roomTopic = "pusheen_party_v6/" + code;
     roomPlayers.clear();
     syncMyPlayerEntry();
 
@@ -1608,7 +1654,6 @@
     ctx.fillText(label, 0, 31);
     ctx.restore();
   }
-
   function initPusheen(playerIds) {
     const tints = new Array("#b8aeb3", "#ffd43b", "#55efc4", "#c084fc");
     const cats = new Map();
@@ -1725,8 +1770,7 @@
     }
     loop();
   }
-  // === 2. ГОНКА КУБИКОВ (2–4 ИГРОКА) ===
-  // === 2. ГОНКА КУБИКОВ С 3D-АНИМАЦИЕЙ ВСЕХ 6 ГРАНЕЙ ===
+  // === 2. ГОНКА КУБИКОВ С ДОЛГИМ 3D-ВРАЩЕНИЕМ И ВСЕМИ 6 ГРАНЯМИ ===
   function buildDiceHtml() {
     function pips(positions) {
       let html = "";
@@ -1751,27 +1795,30 @@
 
   function animateDiceCube(faceVal) {
     const cube = document.getElementById("diceCube");
-    if (!cube) return;
-    // Углы поворота для каждой из 6 граней + 2 полных оборота для красивого броска
-    let rx = 720, ry = 720;
-    if (faceVal === 2) { rx = 630; ry = 720; }
-    if (faceVal === 3) { rx = 720; ry = 630; }
-    if (faceVal === 4) { rx = 720; ry = 810; }
-    if (faceVal === 5) { rx = 810; ry = 720; }
-    if (faceVal === 6) { rx = 720; ry = 900; }
-    cube.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg)`;
+    if (!cube || !diceState) return;
+
+    let targetX = 0, targetY = 0;
+    if (faceVal === 2) { targetX = -90; targetY = 0; }
+    if (faceVal === 3) { targetX = 0;   targetY = -90; }
+    if (faceVal === 4) { targetX = 0;   targetY = 90; }
+    if (faceVal === 5) { targetX = 90;  targetY = 0; }
+    if (faceVal === 6) { targetX = 0;   targetY = 180; }
+
+    diceState.spinCount = (diceState.spinCount || 0) + 1;
+    const baseSpin = diceState.spinCount * 1080;
+    cube.style.transform = `rotateX(${baseSpin + targetX}deg) rotateY(${baseSpin + targetY}deg)`;
   }
 
   function initDiceRace(playerIds) {
     const pos = new Map();
     playerIds.forEach(id => pos.set(id, 0));
-    diceState = { order: playerIds, turnIdx: 0, pos, busy: false };
+    diceState = { order: playerIds, turnIdx: 0, pos, busy: false, spinCount: 0 };
     roundScoreEl.textContent = "Цель: 25";
 
     gameContainer.innerHTML = `
       <div class="party-box">
         <div id="diceTurnText" style="font-size:13px;font-weight:700;margin-bottom:4px;"></div>
-        <div id="diceEventText" style="font-size:11px;color:var(--accent2);min-height:16px;">Клетки: 6, 12, 18 (+2) • 9, 15, 21 (-2)</div>
+        <div id="diceEventText" style="font-size:11px;color:var(--accent2);min-height:16px;">Бонусы: 6, 12, 18 (+2) • Ловушки: 9, 15, 21 (-2)</div>
         ${buildDiceHtml()}
         <div class="dice-track" id="diceTrack"></div>
         <button class="btn" id="rollDiceBtn">🎲 Бросить кубик</button>
@@ -1801,9 +1848,9 @@
       const curId = diceState.order.at(diceState.turnIdx % diceState.order.length);
       const curP = roomPlayers.get(curId);
       const isMyTurn = curId === myClientId && !diceState.busy;
-      document.getElementById("diceTurnText").textContent = curId === myClientId
-        ? "Твой ход! Жми кубик 🎲"
-        : `Ходит ${curP ? curP.nick : "игрок"}...`;
+      document.getElementById("diceTurnText").textContent = diceState.busy
+        ? "Кубик крутится... 🎲"
+        : (curId === myClientId ? "Твой ход! Жми кубик 🎲" : `Ходит ${curP ? curP.nick : "игрок"}...`);
       document.getElementById("rollDiceBtn").disabled = !isMyTurn;
       document.getElementById("rollDiceBtn").style.opacity = isMyTurn ? "1" : "0.45";
     }
@@ -1827,14 +1874,13 @@
 
     playSFX("pop");
     animateDiceCube(roll);
-    gameHintEl.textContent = `Бросок: ${roll}...`;
+    gameHintEl.textContent = "Бросок...";
 
     setTimeout(() => {
       if (!diceState || currentGame !== "dice") return;
       let nextVal = (diceState.pos.get(pid) || 0) + roll;
-      let eventMsg = `Выпало ${roll}!`;
+      let eventMsg = `Выпало: ${roll}!`;
 
-      // Бонусные и штрафные клетки на поле
       if (nextVal === 6 || nextVal === 12 || nextVal === 18) {
         nextVal += 2;
         eventMsg = `Выпало ${roll} + Буст ⭐ (+2 клетки)!`;
@@ -1853,62 +1899,80 @@
       diceState.pos.set(pid, nextVal);
       diceState.turnIdx++;
       diceState.busy = false;
+      gameHintEl.textContent = `Выпало: ${roll}`;
       if (diceState.render) diceState.render();
 
       if (nextVal >= 25) {
         const wp = roomPlayers.get(pid);
         finishPartyRound(pid, `${wp ? wp.nick : "Игрок"} финишировал первым! 🏆`);
       }
-    }, 900);
+    }, 1700);
   }
-  // === 3. ГОРЯЧАЯ БОМБА (2–4 ИГРОКА) ===
-  // === 3. ГОРЯЧАЯ БОМБА СО СПОСОБНОСТЯМИ И НАПРЯЖЕНИЕМ (2–4 ИГРОКА) ===
+  // === 3. ГОРЯЧАЯ БОМБА С ЗАДАНИЕМ «СОЕДИНИ ПРОВОДА» ===
+  function generateBombWires() {
+    if (!bombState) return;
+    bombState.wiresDone = false;
+    bombState.selectedLeft = null;
+    bombState.matchedColors.clear();
+
+    const wires = new Array(
+      { id: "red", name: "🔴 Красный", bg: "#ff6b81" },
+      { id: "gold", name: "🟡 Жёлтый", bg: "#ffd43b" },
+      { id: "mint", name: "🟢 Мятный", bg: "#55efc4" }
+    );
+    bombState.leftOrder = new Array(...wires).sort(() => Math.random() - 0.5);
+    bombState.rightOrder = new Array(...wires).sort(() => Math.random() - 0.5);
+  }
+
   function initHotBomb(playerIds, initiator) {
     bombState = {
       players: playerIds,
       holderId: playerIds.at(0),
-      prevHolderId: playerIds.at(playerIds.length - 1),
-      timeLeft: 16 + Math.floor(Math.random() * 8),
+      timeLeft: 20 + Math.floor(Math.random() * 8),
       shieldUsed: false,
       freezeUsed: false,
-      reverseUsed: false,
       frozenUntil: 0,
-      shieldedId: null
+      shieldedId: null,
+      wiresDone: false,
+      selectedLeft: null,
+      matchedColors: new Set()
     };
-    roundScoreEl.textContent = "Выживание";
+    roundScoreEl.textContent = "Соедини провода!";
 
     gameContainer.innerHTML = `
       <div class="bomb-arena-wrap" id="bombWrap">
-        <div class="bomb-core" id="bombCore">💣</div>
-        <div id="bombHolderName" style="font-size:14.5px;font-weight:800;margin:4px 0;"></div>
+        <div class="bomb-core">💣</div>
+        <div id="bombHolderName" style="font-size:14px;font-weight:800;margin:4px 0;"></div>
         <div id="bombStatusSub" style="font-size:11px;color:#ffd43b;min-height:16px;"></div>
 
         <div class="bomb-skills">
           <button class="skill-btn" id="skillShieldBtn">🛡️ Щит (1)</button>
           <button class="skill-btn" id="skillFreezeBtn">❄️ Заморозка (1)</button>
-          <button class="skill-btn" id="skillReverseBtn">🔄 Обратка (1)</button>
         </div>
 
+        <div id="wirePuzzleArea"></div>
         <div id="bombTargets" style="display:flex;flex-direction:column;gap:7px;"></div>
       </div>
     `;
 
-    function passBombTo(targetId, actionNote) {
+    if (bombState.holderId === myClientId) generateBombWires();
+
+    function passBombTo(targetId) {
       if (bombState.shieldedId === targetId) {
-        // Щит отразил бомбу обратно!
         bombState.shieldedId = null;
+        generateBombWires();
         playSFX("star");
         sendData({ type: "bombStateSync", holderId: bombState.holderId, shieldedId: null, note: "🛡️ ЩИТ ОТРАЗИЛ БОМБУ!" });
         const sub = document.getElementById("bombStatusSub");
-        if (sub) sub.textContent = "🛡️ У соперника сработал ЩИТ! Бомба вернулась!";
+        if (sub) sub.textContent = "🛡️ У соперника сработал ЩИТ! Соединяй провода снова!";
         renderBombUI();
         return;
       }
-      bombState.prevHolderId = bombState.holderId;
       bombState.holderId = targetId;
+      bombState.wiresDone = false;
       playSFX("pop");
       renderBombUI();
-      sendData({ type: "bombStateSync", holderId: targetId, prevHolderId: bombState.prevHolderId, shieldedId: bombState.shieldedId, note: actionNote || "" });
+      sendData({ type: "bombStateSync", holderId: targetId, shieldedId: bombState.shieldedId, note: "" });
     }
 
     function renderBombUI() {
@@ -1919,40 +1983,91 @@
       if (wrap) wrap.classList.toggle("danger", iHold);
 
       document.getElementById("bombHolderName").textContent = iHold
-        ? (isFrozen ? "❄️ ТЫ ЗАМОРОЖЕН НА 2 СЕК!" : "🔥 БОМБА У ТЕБЯ! ПЕРЕКИНЬ ЕЁ!")
+        ? (isFrozen ? "❄️ ТЫ ЗАМОРОЖЕН НА 2 СЕК!" : (bombState.wiresDone ? "✅ ПРОВОДА СОЕДИНЕНЫ! КИДАЙ!" : "⚡ СОЕДИНИ ПРОВОДА, ЧТОБЫ ПЕРЕКИНУТЬ!"))
         : `Бомба в руках: ${hP ? hP.nick : "..."}`;
 
-      // Настройка кнопок способностей
       const sBtn = document.getElementById("skillShieldBtn");
       const fBtn = document.getElementById("skillFreezeBtn");
-      const rBtn = document.getElementById("skillReverseBtn");
       if (sBtn) sBtn.disabled = bombState.shieldUsed || iHold;
       if (fBtn) fBtn.disabled = bombState.freezeUsed || iHold;
-      if (rBtn) rBtn.disabled = bombState.reverseUsed || !iHold || isFrozen;
 
+      const wireArea = document.getElementById("wirePuzzleArea");
       const box = document.getElementById("bombTargets");
+      wireArea.innerHTML = "";
       box.innerHTML = "";
-      if (iHold && !isFrozen) {
+
+      if (iHold && !isFrozen && !bombState.wiresDone) {
+        if (!bombState.leftOrder) generateBombWires();
+        let leftHtml = "";
+        bombState.leftOrder.forEach(w => {
+          const done = bombState.matchedColors.has(w.id) ? " done" : "";
+          const sel = bombState.selectedLeft === w.id ? " selected" : "";
+          leftHtml += `<button class="wire-node${done}${sel}" data-side="L" data-w="${w.id}" style="background:${w.bg};">${w.name}</button>`;
+        });
+
+        let rightHtml = "";
+        bombState.rightOrder.forEach(w => {
+          const done = bombState.matchedColors.has(w.id) ? " done" : "";
+          rightHtml += `<button class="wire-node${done}" data-side="R" data-w="${w.id}" style="background:${w.bg};">${w.name}</button>`;
+        });
+
+        wireArea.innerHTML = `
+          <div class="wire-box">
+            <div style="font-size:10.5px;color:#8f9bb3;">Нажми цвет слева → затем такой же справа</div>
+            <div class="wire-grid">
+              <div class="wire-col">${leftHtml}</div>
+              <div class="wire-col">${rightHtml}</div>
+            </div>
+          </div>
+        `;
+
+        wireArea.querySelectorAll(".wire-node").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const side = btn.getAttribute("data-side");
+            const wId = btn.getAttribute("data-w");
+            if (side === "L") {
+              bombState.selectedLeft = wId;
+              playSFX("pop");
+              renderBombUI();
+            } else if (side === "R" && bombState.selectedLeft) {
+              if (bombState.selectedLeft === wId) {
+                bombState.matchedColors.add(wId);
+                bombState.selectedLeft = null;
+                playSFX("eat");
+                if (bombState.matchedColors.size >= 3) {
+                  bombState.wiresDone = true;
+                  playSFX("star");
+                }
+              } else {
+                bombState.selectedLeft = null;
+                playSFX("chili");
+              }
+              renderBombUI();
+            }
+          });
+        });
+      }
+
+      if (iHold && !isFrozen && bombState.wiresDone) {
         bombState.players.forEach(pid => {
           if (pid === myClientId) return;
           const tp = roomPlayers.get(pid);
           const hasShield = bombState.shieldedId === pid;
           const b = document.createElement("button");
           b.className = "btn";
-          b.textContent = `👉 Кинуть ${tp ? tp.nick : "Сопернику"}${hasShield ? " (🛡️)" : ""}`;
-          b.addEventListener("click", () => passBombTo(pid, ""));
+          b.textContent = `👉 Перекинуть ${tp ? tp.nick : "Сопернику"}${hasShield ? " (🛡️)" : ""}`;
+          b.addEventListener("click", () => passBombTo(pid));
           box.appendChild(b);
         });
       }
     }
 
-    // Привязка способностей
     document.getElementById("skillShieldBtn").addEventListener("click", () => {
       if (bombState.shieldUsed) return;
       bombState.shieldUsed = true;
       bombState.shieldedId = myClientId;
       playSFX("star");
-      document.getElementById("bombStatusSub").textContent = "🛡️ Ты активировал Щит на следующий бросок!";
+      document.getElementById("bombStatusSub").textContent = "🛡️ Щит активирован!";
       renderBombUI();
       sendData({ type: "bombStateSync", holderId: bombState.holderId, shieldedId: myClientId, note: `🛡️ ${myNick} включил Щит!` });
     });
@@ -1961,16 +2076,9 @@
       if (bombState.freezeUsed) return;
       bombState.freezeUsed = true;
       playSFX("chili");
-      document.getElementById("bombStatusSub").textContent = "❄️ Держатель бомбы заморожен на 2.2 сек!";
+      document.getElementById("bombStatusSub").textContent = "❄️ Держатель бомбы заморожен!";
       renderBombUI();
       sendData({ type: "bombFreeze", targetId: bombState.holderId, byNick: myNick });
-    });
-
-    document.getElementById("skillReverseBtn").addEventListener("click", () => {
-      if (bombState.reverseUsed || bombState.holderId !== myClientId) return;
-      bombState.reverseUsed = true;
-      const backTo = bombState.prevHolderId || bombState.players.find(id => id !== myClientId);
-      passBombTo(backTo, `🔄 ${myNick} вернул бомбу обратно!`);
     });
 
     bombState.render = renderBombUI;
@@ -1980,8 +2088,7 @@
       const timer = setInterval(() => {
         if (currentGame !== "bomb") { clearInterval(timer); return; }
         bombState.timeLeft--;
-        // Ускорение звука тиканья, когда остаётся мало времени
-        playTone(bombState.timeLeft <= 5 ? 880 : 440, "triangle", 0.06, 0.12);
+        playTone(bombState.timeLeft <= 6 ? 880 : 440, "triangle", 0.06, 0.12);
 
         if (bombState.timeLeft <= 0) {
           clearInterval(timer);
@@ -1993,7 +2100,6 @@
       }, 1000);
     }
   }
-
   // === 4. РЕАКЦИЯ (2–4 ИГРОКА) ===
   function initReaction(initiator) {
     gameHintEl.textContent = "Кто быстрее 10!";
@@ -2144,6 +2250,10 @@
       const v = tttState.board.at(l.at(0));
       if (v && v === tttState.board.at(l.at(1)) && v === tttState.board.at(l.at(2))) {
         tttState.over = true;
+        l.forEach(idx => {
+          const el = gameContainer.querySelector(`.ttt-cell[data-idx="${idx}"]`);
+          if (el) el.classList.add("win-cell");
+        });
         finishPartyRound(v === "X" ? tttState.p1 : tttState.p2);
         return;
       }
@@ -2173,8 +2283,8 @@
 
     if (msg.type === "bombStateSync" && bombState) {
       bombState.holderId = msg.holderId;
-      if (msg.prevHolderId) bombState.prevHolderId = msg.prevHolderId;
       bombState.shieldedId = msg.shieldedId || null;
+      if (msg.holderId === myClientId && !bombState.wiresDone) generateBombWires();
       const sub = document.getElementById("bombStatusSub");
       if (sub && msg.note) sub.textContent = msg.note;
       playSFX("pop");
