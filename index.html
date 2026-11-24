@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Pusheen & Arcade Duo — Игры вдвоём</title>
+  <title>Pusheen Arcade — Игры вдвоём</title>
   <style>
     :root {
       --bg-glow: #251736;
@@ -50,7 +50,7 @@
       background: radial-gradient(circle at 50% 20%, var(--bg-glow) 0%, #08080c 85%);
       color: #ffffff;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      transition: background 0.45s ease;
+      transition: background 0.4s ease;
     }
 
     body {
@@ -58,18 +58,19 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 12px 8px 24px;
+      padding: 10px 8px 20px;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
 
     .app-box {
+      position: relative;
       width: 100%;
       max-width: 440px;
       background: rgba(16, 16, 24, 0.96);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 26px;
-      padding: 15px 13px 17px;
+      padding: 13px 12px 16px;
       box-shadow: 0 22px 50px rgba(0, 0, 0, 0.78);
     }
 
@@ -80,17 +81,46 @@
       margin-bottom: 12px;
     }
 
-    .logo {
-      font-size: 12.5px;
-      font-weight: 800;
-      letter-spacing: 0.8px;
-      color: var(--accent);
-      text-transform: uppercase;
+    .corner-profile {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--accent-border);
+      border-radius: 20px;
+      padding: 3px 10px 3px 4px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .corner-profile:active { transform: scale(0.95); }
+
+    .corner-ava {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .corner-ava img { width: 100%; height: 100%; object-fit: cover; }
+
+    .corner-nick {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      max-width: 90px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .themes {
       display: flex;
-      gap: 7px;
+      gap: 6px;
       align-items: center;
     }
 
@@ -102,12 +132,12 @@
       padding: 2px 6px;
       font-size: 11px;
       cursor: pointer;
-      margin-right: 4px;
+      margin-right: 3px;
     }
 
     .theme-btn {
-      width: 15px;
-      height: 15px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
       border: 1.5px solid rgba(255, 255, 255, 0.25);
       cursor: pointer;
@@ -118,47 +148,66 @@
     .theme-btn[data-t="purple"] { background: #c084fc; }
     .theme-btn[data-t="gold"]   { background: #ffd43b; }
     .theme-btn[data-t="mint"]   { background: #55efc4; }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 200;
+    }
+    .modal-backdrop.open { display: flex; animation: fadeIn 0.2s ease; }
+
+    .modal-card {
+      width: 100%;
+      max-width: 360px;
+      background: #14141f;
+      border: 1.5px solid var(--accent-border);
+      border-radius: 24px;
+      padding: 18px 16px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+    }
+
+    .modal-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .stat-box {
+      background: #0b0b12;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 8px 4px;
+    }
+    .stat-val { font-size: 16px; font-weight: 800; color: var(--accent2); }
+    .stat-lbl { font-size: 10px; color: #8f9bb3; text-transform: uppercase; }
 
     .screen { display: none; }
-    .screen.active { display: block; animation: fadeIn 0.3s ease; }
+    .screen.active { display: block; animation: fadeIn 0.25s ease; }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(6px); }
+      from { opacity: 0; transform: translateY(5px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    h1 { font-size: 21px; font-weight: 800; margin-bottom: 3px; }
-    .sub { font-size: 12px; color: #8f9bb3; margin-bottom: 12px; }
-
-    .input-group {
-      background: #0b0b11;
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      border-radius: 16px;
-      padding: 10px 12px;
-      margin-bottom: 12px;
-      text-align: left;
-    }
-
-    .input-label {
-      font-size: 10.5px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #8f9bb3;
-      margin-bottom: 7px;
-      display: block;
-    }
+    h1 { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .sub { font-size: 12px; color: #8f9bb3; margin-bottom: 14px; }
 
     input[type="text"] {
       width: 100%;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 12px;
       padding: 9px 11px;
       color: #fff;
       font-size: 14px;
       font-weight: 600;
       outline: none;
-      margin-bottom: 9px;
     }
     input[type="text"]:focus { border-color: var(--accent); }
 
@@ -167,6 +216,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 6px;
+      margin: 10px 0 12px;
     }
 
     .ava {
@@ -188,11 +238,7 @@
       background: var(--accent-soft);
       transform: scale(1.06);
     }
-    .ava img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+    .ava img { width: 100%; height: 100%; object-fit: cover; }
 
     .upload-ava-btn {
       background: var(--accent-soft);
@@ -205,6 +251,7 @@
       cursor: pointer;
       white-space: nowrap;
     }
+
     .btn {
       width: 100%;
       background: var(--grad-main);
@@ -220,7 +267,7 @@
     .btn:active { transform: scale(0.97); }
 
     .btn-secondary {
-      background: rgba(255, 255, 255, 0.07);
+      background: rgba(255, 255, 255, 0.08);
       color: #fff;
       border: 1px solid rgba(255, 255, 255, 0.14);
     }
@@ -235,7 +282,6 @@
       letter-spacing: 3px;
       font-family: "Courier New", monospace;
       font-size: 16px;
-      margin-bottom: 0;
     }
     .join-row .btn { width: auto; padding: 0 18px; }
 
@@ -245,7 +291,6 @@
       color: var(--accent2);
       min-height: 18px;
     }
-
     .players-header {
       display: flex;
       align-items: center;
@@ -253,32 +298,32 @@
       background: #0b0b11;
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px;
-      padding: 8px 11px;
-      margin-bottom: 10px;
+      padding: 7px 10px;
+      margin-bottom: 9px;
     }
 
     .p-badge {
       display: flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
       font-size: 12px;
       font-weight: 700;
-      max-width: 38%;
+      max-width: 39%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
     .mini-ava {
-      width: 26px;
-      height: 26px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: var(--accent-soft);
       border: 1px solid var(--accent-border);
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
+      font-size: 13px;
       overflow: hidden;
       flex-shrink: 0;
     }
@@ -299,8 +344,8 @@
       background: var(--accent-soft);
       border: 1px dashed var(--accent-border);
       border-radius: 14px;
-      padding: 7px 10px;
-      margin-bottom: 10px;
+      padding: 6px 10px;
+      margin-bottom: 9px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -329,10 +374,11 @@
     .games-grid {
       display: flex;
       flex-direction: column;
-      gap: 7px;
-      margin-bottom: 10px;
-      max-height: 310px;
+      gap: 6px;
+      margin-bottom: 9px;
+      max-height: 265px;
       overflow-y: auto;
+      padding-right: 2px;
     }
 
     .game-card {
@@ -341,77 +387,87 @@
       justify-content: space-between;
       background: #0d0d14;
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 15px;
-      padding: 9px 12px;
+      border-radius: 14px;
+      padding: 8px 11px;
       cursor: pointer;
       text-align: left;
-      transition: border-color 0.25s, transform 0.15s;
+      transition: transform 0.12s;
     }
     .game-card:active { transform: scale(0.98); }
-    .game-card:hover { border-color: var(--accent-border); }
     .game-card.featured {
       border-color: rgba(255, 110, 180, 0.35);
-      background: linear-gradient(90deg, rgba(255, 110, 180, 0.08), rgba(13, 13, 20, 0.95));
+      background: linear-gradient(90deg, rgba(255, 110, 180, 0.09), rgba(13, 13, 20, 0.95));
     }
 
-    .g-info { display: flex; align-items: center; gap: 10px; }
-    .g-icon { font-size: 22px; }
-    .g-title { font-size: 13px; font-weight: 700; color: #fff; }
-    .g-desc { font-size: 10.5px; color: #8f9bb3; }
+    .g-info { display: flex; align-items: center; gap: 9px; }
+    .g-icon { font-size: 21px; }
+    .g-title { font-size: 12.5px; font-weight: 700; color: #fff; }
+    .g-desc { font-size: 10px; color: #8f9bb3; }
     .g-play {
-      font-size: 11px;
+      font-size: 10.5px;
       font-weight: 800;
       color: var(--accent);
       background: var(--accent-soft);
-      padding: 5px 9px;
-      border-radius: 10px;
+      padding: 4px 8px;
+      border-radius: 9px;
       flex-shrink: 0;
     }
+
+    .chat-history {
+      height: 76px;
+      overflow-y: auto;
+      background: #09090f;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 6px 9px;
+      margin-top: 6px;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      scroll-behavior: smooth;
+    }
+    .chat-msg {
+      font-size: 11.5px;
+      line-height: 1.35;
+      color: #e2e8f0;
+      word-break: break-word;
+    }
+    .chat-msg b { color: var(--accent2); }
+    .chat-msg.me b { color: var(--accent); }
 
     .chat-bar {
       display: flex;
       gap: 6px;
-      margin-top: 8px;
+      margin-top: 6px;
     }
     .chat-bar input {
-      margin-bottom: 0;
       padding: 7px 10px;
       font-size: 12px;
-      border-radius: 12px;
+      border-radius: 11px;
     }
     .chat-send {
       background: var(--accent-soft);
       border: 1px solid var(--accent-border);
       color: #fff;
-      border-radius: 12px;
+      border-radius: 11px;
       padding: 0 12px;
       font-weight: 700;
       cursor: pointer;
-    }
-
-    .chat-bubble {
-      font-size: 11.5px;
-      color: #e2e8f0;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 10px;
-      padding: 5px 9px;
-      margin-top: 6px;
-      min-height: 24px;
-      text-align: left;
     }
 
     .quick-chat {
       display: flex;
       justify-content: center;
       gap: 7px;
-      margin-top: 8px;
+      margin-top: 7px;
     }
     .emote-btn {
       background: rgba(255, 255, 255, 0.06);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 4px 10px;
-      font-size: 15px;
+      border-radius: 11px;
+      padding: 4px 9px;
+      font-size: 14px;
       cursor: pointer;
     }
     .emote-btn:active { transform: scale(0.9); }
@@ -421,18 +477,19 @@
       font-size: 28px;
       pointer-events: none;
       z-index: 99;
-      animation: emoteFly 1.4s ease-out forwards;
+      animation: emoteFly 1.3s ease-out forwards;
     }
     @keyframes emoteFly {
       0%   { opacity: 0; transform: translateY(15px) scale(0.5); }
       20%  { opacity: 1; transform: translateY(0) scale(1.1); }
       100% { opacity: 0; transform: translateY(-90px) scale(1); }
     }
+
     .game-topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 9px;
+      margin-bottom: 8px;
     }
 
     .back-btn {
@@ -456,7 +513,7 @@
     canvas.game-canvas {
       width: 100%;
       max-width: 340px;
-      height: 410px;
+      height: 400px;
       background: #08080e;
       border: 2px solid var(--accent-border);
       border-radius: 18px;
@@ -468,7 +525,7 @@
     .reaction-arena {
       position: relative;
       width: 100%;
-      height: 330px;
+      height: 320px;
       background: #08080e;
       border: 2px solid var(--accent-border);
       border-radius: 18px;
@@ -485,16 +542,12 @@
       align-items: center;
       justify-content: center;
       font-size: 24px;
-      box-shadow: 0 0 18px var(--accent);
       cursor: pointer;
-      animation: popOrb 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      animation: popOrb 0.18s ease-out;
     }
-    .target-orb.bomb {
-      background: linear-gradient(135deg, #ff4757, #2f3542);
-      box-shadow: 0 0 18px #ff4757;
-    }
+    .target-orb.bomb { background: linear-gradient(135deg, #ff4757, #2f3542); }
     @keyframes popOrb {
-      from { transform: scale(0.2); }
+      from { transform: scale(0.3); }
       to   { transform: scale(1); }
     }
 
@@ -524,7 +577,6 @@
       border: 1.5px solid var(--accent-border);
       font-size: 30px;
       cursor: pointer;
-      transition: transform 0.15s;
     }
     .rps-btn:active { transform: scale(0.92); }
 
@@ -548,15 +600,23 @@
       font-weight: 800;
       cursor: pointer;
     }
-    .ttt-cell.x { color: #ff70b8; text-shadow: 0 0 12px rgba(255, 112, 184, 0.6); }
-    .ttt-cell.o { color: #ffd43b; text-shadow: 0 0 12px rgba(255, 212, 59, 0.6); }
+    .ttt-cell.x { color: #ff70b8; }
+    .ttt-cell.o { color: #ffd43b; }
+    .ttt-cell.win-cell {
+      border-color: #55efc4;
+      background: rgba(85, 239, 196, 0.18);
+    }
   </style>
 </head>
 <body>
 
 <div class="app-box">
   <div class="top-bar">
-    <div class="logo">🐱 Pusheen Arcade</div>
+    <div class="corner-profile" id="openProfileBtn" title="Открыть профиль и статистику">
+      <div class="corner-ava" id="cornerAva">🐱</div>
+      <div class="corner-nick" id="cornerNick">Игрок</div>
+    </div>
+
     <div class="themes">
       <button class="sound-btn" id="soundToggleBtn" title="Звук">🔊</button>
       <button class="theme-btn active" data-t="pink" title="Розовый"></button>
@@ -566,27 +626,10 @@
     </div>
   </div>
 
-  <!-- ЭКРАН 1: ПРОФИЛЬ, СОХРАНЕНИЕ АККАУНТА И КОМНАТА -->
+  <!-- ЭКРАН 1: ВХОД И СОЗДАНИЕ КОМНАТЫ -->
   <div class="screen active" id="screenConnect">
-    <h1>Играем вдвоём</h1>
-    <div class="sub" id="profileStatsLine">Профиль • Побед: 0 • Игр: 0</div>
-
-    <div class="input-group">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <label class="input-label" style="margin-bottom:0;">Твой ник и аватар</label>
-        <button id="exportAccBtn" style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;">💾 Код акка</button>
-      </div>
-      <input type="text" id="nickInput" maxlength="12" placeholder="Введи ник...">
-      <div class="avatars-row" id="avatarPicker">
-        <div class="ava active" data-ava="🐱">🐱</div>
-        <div class="ava" data-ava="🦊">🦊</div>
-        <div class="ava" data-ava="🐰">🐰</div>
-        <div class="ava" data-ava="⚡">⚡</div>
-        <div class="ava" id="customAvaPreview" style="display:none;"></div>
-        <button class="upload-ava-btn" id="uploadAvaBtn">📷 Фото</button>
-        <input type="file" id="avaFileInput" accept="image/*" style="display:none;">
-      </div>
-    </div>
+    <h1>Pusheen Arcade</h1>
+    <div class="sub">Нажми на аватарку в углу, чтобы изменить профиль</div>
 
     <button class="btn" id="createRoomBtn">+ Создать комнату</button>
 
@@ -616,8 +659,19 @@
         <div class="g-info">
           <div class="g-icon">🐱</div>
           <div>
-            <div class="g-title">Пушин: Вкусняшки и Бонусы</div>
-            <div class="g-desc">Лови пончики (+1), звёзды (+3) и берегись перца (-2)!</div>
+            <div class="g-title">Пушин: Вкусняшки</div>
+            <div class="g-desc">Крупные пончики (+1), звёзды (+3) и перец (-2)</div>
+          </div>
+        </div>
+        <div class="g-play">Играть</div>
+      </div>
+
+      <div class="game-card" data-game="pong">
+        <div class="g-info">
+          <div class="g-icon">🏓</div>
+          <div>
+            <div class="g-title">Неоновый Пинг-Понг</div>
+            <div class="g-desc">Быстрый теннис с ускорением мяча до 5 очков</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
@@ -627,8 +681,8 @@
         <div class="g-info">
           <div class="g-icon">🏒</div>
           <div>
-            <div class="g-title">Неоновый Аэрохоккей</div>
-            <div class="g-desc">Плавная физика 60 FPS со световым следом до 5 голов</div>
+            <div class="g-title">Аэрохоккей 1 на 1</div>
+            <div class="g-desc">Забей 5 шайб в ворота соперника</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
@@ -638,8 +692,8 @@
         <div class="g-info">
           <div class="g-icon">⚡</div>
           <div>
-            <div class="g-title">Дуэль на реакцию + Бомбы</div>
-            <div class="g-desc">Лови цели (+1) до 10, но не нажимай на 💣 (-1)!</div>
+            <div class="g-title">Дуэль на реакцию</div>
+            <div class="g-desc">Набери 10 очков и не трогай 💣</div>
           </div>
         </div>
         <div class="g-play">Играть</div>
@@ -668,9 +722,11 @@
       </div>
     </div>
 
-    <div class="chat-bubble" id="chatLog">💬 Чат комнаты пуст...</div>
+    <div class="chat-history" id="chatLog">
+      <div class="chat-msg" style="color:#8f9bb3;">💬 Чат комнаты (можно листать)...</div>
+    </div>
     <div class="chat-bar">
-      <input type="text" id="chatInput" maxlength="60" placeholder="Написать сообщение...">
+      <input type="text" id="chatInput" maxlength="80" placeholder="Написать сообщение...">
       <button class="chat-send" id="chatSendBtn">➤</button>
     </div>
 
@@ -701,17 +757,57 @@
     </div>
   </div>
 </div>
+
+<!-- МОДАЛЬНОЕ ОКНО ПРОФИЛЯ -->
+<div class="modal-backdrop" id="profileModal">
+  <div class="modal-card">
+    <h2 style="font-size:17px; margin-bottom:2px;">Твой профиль</h2>
+    <div style="font-size:11px; color:#8f9bb3;">Сохраняется автоматически на устройстве</div>
+
+    <div class="modal-stats">
+      <div class="stat-box">
+        <div class="stat-val" id="statGames">0</div>
+        <div class="stat-lbl">Игр</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="statWins">0</div>
+        <div class="stat-lbl">Побед</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="statWinrate">0%</div>
+        <div class="stat-lbl">Винрейт</div>
+      </div>
+    </div>
+
+    <input type="text" id="nickInput" maxlength="12" placeholder="Твой ник...">
+
+    <div class="avatars-row" id="avatarPicker">
+      <div class="ava active" data-ava="🐱">🐱</div>
+      <div class="ava" data-ava="🦊">🦊</div>
+      <div class="ava" data-ava="🐰">🐰</div>
+      <div class="ava" data-ava="⚡">⚡</div>
+      <div class="ava" id="customAvaPreview" style="display:none;"></div>
+      <button class="upload-ava-btn" id="uploadAvaBtn">📷 Фото</button>
+      <input type="file" id="avaFileInput" accept="image/*" style="display:none;">
+    </div>
+
+    <button class="btn" id="saveProfileModalBtn" style="margin-bottom:8px;">✓ Сохранить профиль</button>
+    <div style="display:flex; gap:8px;">
+      <button class="btn btn-secondary" id="exportAccBtn" style="font-size:12px;">💾 Код акка</button>
+      <button class="btn btn-secondary" id="closeProfileModalBtn" style="font-size:12px;">Закрыть</button>
+    </div>
+  </div>
+</div>
 <script>
-  // === 1. ВСТРОЕННЫЙ ЗВУКОВОЙ СИНТЕЗАТОР (WEB AUDIO API) ===
   let soundEnabled = true;
   let audioCtx = null;
 
-  function playTone(freq, type = "sine", dur = 0.12, vol = 0.12) {
+  function playTone(freq, type = "sine", dur = 0.11, vol = 0.11) {
     if (!soundEnabled) return;
     try {
       if (!audioCtx) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        audioCtx = new AudioContext();
+        const AC = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AC();
       }
       if (audioCtx.state === "suspended") audioCtx.resume();
       const osc = audioCtx.createOscillator();
@@ -728,14 +824,20 @@
   }
 
   function playSFX(kind) {
-    if (kind === "eat")   { playTone(587, "sine", 0.08); setTimeout(() => playTone(880, "sine", 0.12), 60); }
-    if (kind === "star")  { playTone(659, "triangle", 0.08); setTimeout(() => playTone(987, "triangle", 0.08), 55); setTimeout(() => playTone(1318, "triangle", 0.16), 110); }
-    if (kind === "chili") { playTone(180, "sawtooth", 0.22, 0.15); }
-    if (kind === "hit")   { playTone(420, "triangle", 0.07, 0.1); }
-    if (kind === "goal")  { playTone(523, "square", 0.1); setTimeout(() => playTone(659, "square", 0.1), 90); setTimeout(() => playTone(784, "square", 0.22), 180); }
-    if (kind === "pop")   { playTone(740, "sine", 0.07, 0.09); }
-    if (kind === "win")   { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => playTone(f, "triangle", 0.18), i * 95)); }
-    if (kind === "lose")  { [440, 392, 349, 293].forEach((f, i) => setTimeout(() => playTone(f, "sawtooth", 0.18, 0.08), i * 110)); }
+    if (kind === "eat")   { playTone(587, "sine", 0.07); setTimeout(() => playTone(880, "sine", 0.1), 55); }
+    if (kind === "star")  { playTone(659, "triangle", 0.07); setTimeout(() => playTone(1318, "triangle", 0.14), 70); }
+    if (kind === "chili") { playTone(170, "sawtooth", 0.2, 0.14); }
+    if (kind === "hit")   { playTone(430, "triangle", 0.06, 0.1); }
+    if (kind === "goal")  { playTone(523, "square", 0.09); setTimeout(() => playTone(784, "square", 0.18), 100); }
+    if (kind === "pop")   { playTone(720, "sine", 0.06, 0.08); }
+    if (kind === "win")   {
+      const winNotes =;
+      winNotes.forEach((f, i) => setTimeout(() => playTone(f, "triangle", 0.16), i * 90));
+    }
+    if (kind === "lose")  {
+      const loseNotes =;
+      loseNotes.forEach((f, i) => setTimeout(() => playTone(f, "sawtooth", 0.16, 0.08), i * 105));
+    }
   }
 
   document.getElementById("soundToggleBtn").addEventListener("click", (e) => {
@@ -744,7 +846,6 @@
     if (soundEnabled) playSFX("pop");
   });
 
-  // === 2. ТЕМЫ, ФОТО-АВАТАР И СОХРАНЕНИЕ АККАУНТА ===
   const themeBtns = document.querySelectorAll(".theme-btn");
   themeBtns.forEach(btn => {
     btn.addEventListener("click", () => {
@@ -757,13 +858,14 @@
     });
   });
 
+  const profileModal = document.getElementById("profileModal");
   const nickInput = document.getElementById("nickInput");
   const avatarPicker = document.getElementById("avatarPicker");
   const avaFileInput = document.getElementById("avaFileInput");
   const customAvaPreview = document.getElementById("customAvaPreview");
 
-  let accData = JSON.parse(localStorage.getItem("pusheen_acc_v2") || "null") || {
-    nick: "",
+  let accData = JSON.parse(localStorage.getItem("pusheen_acc_v3") || "null") || {
+    nick: "Игрок",
     ava: "🐱",
     wins: 0,
     games: 0
@@ -773,12 +875,23 @@
   let myAva = accData.ava;
   nickInput.value = myNick;
 
+  function renderCornerProfile() {
+    document.getElementById("cornerNick").textContent = accData.nick;
+    const cAva = document.getElementById("cornerAva");
+    if (accData.ava.startsWith("data:image")) {
+      cAva.innerHTML = `<img src="${accData.ava}" alt="">`;
+    } else {
+      cAva.textContent = accData.ava;
+    }
+    document.getElementById("statGames").textContent = accData.games;
+    document.getElementById("statWins").textContent = accData.wins;
+    const wr = accData.games > 0 ? Math.round((accData.wins / accData.games) * 100) : 0;
+    document.getElementById("statWinrate").textContent = wr + "%";
+  }
+
   function applySelectedAvatar(val) {
     myAva = val;
-    accData.ava = val;
-    localStorage.setItem("pusheen_acc_v2", JSON.stringify(accData));
     avatarPicker.querySelectorAll(".ava").forEach(a => a.classList.remove("active"));
-
     if (val.startsWith("data:image")) {
       customAvaPreview.style.display = "flex";
       customAvaPreview.innerHTML = `<img src="${val}" alt="ava">`;
@@ -790,19 +903,38 @@
   }
 
   applySelectedAvatar(myAva);
+  renderCornerProfile();
 
-  function saveAccount() {
+  function saveAccount(broadcast = false) {
     accData.nick = nickInput.value.trim() || "Игрок";
     accData.ava = myAva;
     myNick = accData.nick;
-    localStorage.setItem("pusheen_acc_v2", JSON.stringify(accData));
-    document.getElementById("profileStatsLine").textContent =
-      `Профиль: ${accData.nick} • Побед: ${accData.wins} • Игр: ${accData.games}`;
+    localStorage.setItem("pusheen_acc_v3", JSON.stringify(accData));
+    renderCornerProfile();
+    if (typeof updateHeader === "function") updateHeader();
+    if (broadcast && typeof sendData === "function") {
+      sendData({ type: "hello", nick: myNick, ava: myAva });
+    }
   }
-  saveAccount();
+
+  document.getElementById("openProfileBtn").addEventListener("click", () => {
+    renderCornerProfile();
+    profileModal.classList.add("open");
+    playSFX("pop");
+  });
+
+  document.getElementById("closeProfileModalBtn").addEventListener("click", () => {
+    profileModal.classList.remove("open");
+  });
+
+  document.getElementById("saveProfileModalBtn").addEventListener("click", () => {
+    saveAccount(true);
+    profileModal.classList.remove("open");
+    playSFX("eat");
+  });
 
   document.getElementById("exportAccBtn").addEventListener("click", () => {
-    saveAccount();
+    saveAccount(false);
     const saveCode = btoa(unescape(encodeURIComponent(JSON.stringify({
       nick: accData.nick,
       wins: accData.wins,
@@ -820,8 +952,8 @@
           accData.wins = Number(parsed.wins) || 0;
           accData.games = Number(parsed.games) || 0;
           nickInput.value = accData.nick;
-          saveAccount();
-          alert("Аккаунт успешно загружен!");
+          saveAccount(true);
+          alert("Аккаунт загружен!");
         }
       } catch (e) {
         alert("Неверный код аккаунта.");
@@ -842,9 +974,7 @@
     }
   });
 
-  document.getElementById("uploadAvaBtn").addEventListener("click", () => {
-    avaFileInput.click();
-  });
+  document.getElementById("uploadAvaBtn").addEventListener("click", () => avaFileInput.click());
 
   avaFileInput.addEventListener("change", (e) => {
     const file = e.target.files.item(0);
@@ -854,15 +984,14 @@
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        canvas.width = 72;
-        canvas.height = 72;
+        canvas.width = 64;
+        canvas.height = 64;
         const ctx = canvas.getContext("2d");
         const minSide = Math.min(img.width, img.height);
         const sx = (img.width - minSide) / 2;
         const sy = (img.height - minSide) / 2;
-        ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, 72, 72);
-        const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.72);
-        applySelectedAvatar(compressedDataUrl);
+        ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, 64, 64);
+        applySelectedAvatar(canvas.toDataURL("image/jpeg", 0.68));
         playSFX("eat");
       };
       img.src = ev.target.result;
@@ -881,7 +1010,6 @@
     document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
     document.getElementById(id).classList.add("active");
   }
-  // === 3. ЧИСТЫЙ WEBSOCKET-ДВИЖОК БЕЗ ВНЕШНИХ СКРИПТОВ ===
   let ws = null;
   let pingTimer = null;
   let isConnected = false;
@@ -949,7 +1077,7 @@
   function handleIncomingPacket(buf) {
     const view = new Uint8Array(buf);
     if (view.length < 2) return;
-    const type = view[0] >> 4;
+    const type = view >> 4;
 
     if (type === 2) {
       ws.send(buildSubscribePacket(roomTopic));
@@ -962,7 +1090,7 @@
       if (!isHost) {
         setTimeout(() => {
           sendData({ type: "join_req", nick: myNick, ava: myAva });
-        }, 250);
+        }, 200);
       }
       return;
     }
@@ -998,7 +1126,6 @@
           enemyNick = msg.nick;
           enemyAva = msg.ava;
           updateHeader();
-          playSFX("star");
           return;
         }
 
@@ -1013,7 +1140,7 @@
 
     isHost = hostMode;
     roomCode = code;
-    roomTopic = "pusheen_arcade_room_2026/" + code;
+    roomTopic = "pusheen_arcade_v4/" + code;
     isConnected = false;
 
     statusText.textContent = hostMode ? "Создаём комнату..." : "Входим в комнату " + code + "...";
@@ -1032,27 +1159,20 @@
       };
 
       ws.onmessage = (ev) => handleIncomingPacket(ev.data);
-
-      ws.onerror = () => {
-        statusText.textContent = "Ошибка сети. Проверьте интернет и попробуйте снова.";
-      };
-
-      ws.onclose = () => {
-        if (pingTimer) clearInterval(pingTimer);
-      };
+      ws.onerror = () => { statusText.textContent = "Ошибка сети. Проверьте интернет."; };
+      ws.onclose = () => { if (pingTimer) clearInterval(pingTimer); };
     } catch (err) {
       statusText.textContent = "Браузер заблокировал WebSocket.";
     }
   }
 
   document.getElementById("createRoomBtn").addEventListener("click", () => {
-    saveAccount();
-    const newCode = Math.floor(1000 + Math.random() * 9000).toString();
-    connectToRoomBroker(newCode, true);
+    saveAccount(false);
+    connectToRoomBroker(Math.floor(1000 + Math.random() * 9000).toString(), true);
   });
 
   function joinByCode(code) {
-    saveAccount();
+    saveAccount(false);
     if (!code || code.length !== 4) {
       statusText.textContent = "Введите 4-значный код комнаты!";
       return;
@@ -1073,25 +1193,33 @@
     const shareUrl = `${window.location.origin}${window.location.pathname}?room=${roomCode}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
       document.getElementById("copyLinkBtn").textContent = "✓ Ссылка скопирована";
-      setTimeout(() => {
-        document.getElementById("copyLinkBtn").textContent = "🔗 Ссылка-приглашение";
-      }, 2000);
-    }).catch(() => {
-      alert("Код комнаты: " + roomCode);
-    });
+      setTimeout(() => { document.getElementById("copyLinkBtn").textContent = "🔗 Ссылка-приглашение"; }, 2000);
+    }).catch(() => alert("Код комнаты: " + roomCode));
   });
 
   const chatLog = document.getElementById("chatLog");
   const chatInput = document.getElementById("chatInput");
-  function addChatLine(author, text) {
-    chatLog.textContent = `${author}: ${text}`;
-    playSFX("pop");
+  let firstChatMsg = true;
+
+  function addChatLine(author, text, isMe = false) {
+    if (firstChatMsg) {
+      chatLog.innerHTML = "";
+      firstChatMsg = false;
+    }
+    const row = document.createElement("div");
+    row.className = "chat-msg" + (isMe ? " me" : "");
+    row.innerHTML = `<b>${author}:</b> `;
+    row.appendChild(document.createTextNode(text));
+    chatLog.appendChild(row);
+    if (chatLog.children.length > 35) chatLog.firstElementChild.remove();
+    chatLog.scrollTop = chatLog.scrollHeight;
+    if (!isMe) playSFX("pop");
   }
 
   document.getElementById("chatSendBtn").addEventListener("click", () => {
     const txt = chatInput.value.trim();
     if (!txt) return;
-    addChatLine(myNick, txt);
+    addChatLine(myNick, txt, true);
     sendData({ type: "chat", author: myNick, text: txt });
     chatInput.value = "";
   });
@@ -1102,7 +1230,7 @@
     el.style.left = (20 + Math.random() * 60) + "vw";
     el.style.top = "55vh";
     document.body.appendChild(el);
-    setTimeout(() => el.remove(), 1450);
+    setTimeout(() => el.remove(), 1350);
   }
 
   document.querySelectorAll(".emote-btn").forEach(btn => {
@@ -1129,7 +1257,7 @@
   document.querySelectorAll(".game-card").forEach(card => {
     card.addEventListener("click", () => {
       if (!isConnected) {
-        alert("Сначала дождитесь подключения второго игрока по коду или ссылке!");
+        alert("Сначала дождитесь подключения второго игрока!");
         return;
       }
       const g = card.getAttribute("data-game");
@@ -1145,7 +1273,7 @@
       accData.wins++;
       playSFX("win");
       gameHintEl.textContent = customMsg || "Победа! 🏆";
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 10; i++) {
         setTimeout(() => spawnFloatingEmote(["🎉", "🐱", "✨", "🍩"].at(i % 4)), i * 80);
       }
     } else if (iWon === false) {
@@ -1155,23 +1283,19 @@
     } else {
       gameHintEl.textContent = customMsg || "Ничья!";
     }
-    saveAccount();
+    saveAccount(false);
     updateHeader();
     setTimeout(() => {
       stopCurrentGame();
       showScreen("screenLobby");
-    }, 2000);
+    }, 1800);
   }
 
   const gameContainer = document.getElementById("gameContainer");
   const roundScoreEl = document.getElementById("roundScore");
   const gameHintEl = document.getElementById("gameHint");
 
-  let pState = null;
-  let hState = null;
-  let rState = null;
-  let rpsState = null;
-  let tttState = null;
+  let pState = null, pongState = null, hState = null, rState = null, rpsState = null, tttState = null;
 
   function startGame(type, initiator) {
     stopCurrentGame();
@@ -1181,19 +1305,17 @@
     playSFX("pop");
 
     if (type === "pusheen") initPusheen();
+    if (type === "pong") initPong();
     if (type === "hockey") initHockey();
     if (type === "reaction") initReaction(initiator);
     if (type === "rps") initRPS();
     if (type === "ttt") initTTT(initiator);
   }
 
-  // === ИГРА 1: ПЛАВНЫЙ ПУШИН С БОНУСАМИ И ПЕРЧИКОМ (60 FPS LERP) ===
   function drawPusheenCat(ctx, x, y, colorTint, label, dizzy) {
     ctx.save();
     ctx.translate(x, y);
-    if (dizzy) {
-      ctx.rotate(Math.sin(Date.now() * 0.03) * 0.18);
-    }
+    if (dizzy) ctx.rotate(Math.sin(Date.now() * 0.03) * 0.16);
     ctx.fillStyle = colorTint;
     ctx.beginPath();
     ctx.ellipse(0, 4, 28, 21, 0, 0, Math.PI * 2);
@@ -1208,14 +1330,14 @@
 
     ctx.fillStyle = "#1f1b1d";
     if (dizzy) {
-      ctx.font = "bold 11px sans-serif";
+      ctx.font = "bold 12px sans-serif";
       ctx.textAlign = "center";
       ctx.fillText("×", -10, 1);
       ctx.fillText("×", 10, 1);
     } else {
       ctx.beginPath();
-      ctx.arc(-10, -2, 2.5, 0, Math.PI * 2);
-      ctx.arc(10, -2, 2.5, 0, Math.PI * 2);
+      ctx.arc(-10, -2, 2.6, 0, Math.PI * 2);
+      ctx.arc(10, -2, 2.6, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -1226,22 +1348,16 @@
     ctx.arc(2.5, 1, 2.5, 0, Math.PI);
     ctx.stroke();
 
-    ctx.fillStyle = "rgba(255, 112, 184, 0.65)";
-    ctx.beginPath();
-    ctx.arc(-16, 3, 3.5, 0, Math.PI * 2);
-    ctx.arc(16, 3, 3.5, 0, Math.PI * 2);
-    ctx.fill();
-
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 10px sans-serif";
+    ctx.font = "bold 11px sans-serif";
     ctx.textAlign = "center";
-    ctx.fillText(label, 0, 34);
+    ctx.fillText(label, 0, 35);
     ctx.restore();
   }
 
   function initPusheen() {
     roundScoreEl.textContent = "0 : 0";
-    gameHintEl.textContent = "Осталось 30с";
+    gameHintEl.textContent = "30 сек";
     gameContainer.innerHTML = `<canvas id="pusheenCanvas" class="game-canvas" width="320" height="400"></canvas>`;
     const canvas = document.getElementById("pusheenCanvas");
     const ctx = canvas.getContext("2d");
@@ -1259,7 +1375,7 @@
       startTime: Date.now(),
       lastSpawn: 0,
       lastNetSend: 0,
-      lastSyncSend: 0
+      nextId: 1
     };
 
     function moveCat(clientX) {
@@ -1267,7 +1383,7 @@
       const nx = Math.max(32, Math.min(288, (clientX - rect.left) * (320 / rect.width)));
       pState.myX = nx;
       const now = Date.now();
-      if (now - pState.lastNetSend > 38) {
+      if (now - pState.lastNetSend > 50) {
         pState.lastNetSend = now;
         sendData({ type: "pMove", x: Math.round(nx) });
       }
@@ -1288,90 +1404,75 @@
       if (currentGame !== "pusheen") return;
       const now = Date.now();
       const leftSec = Math.max(0, 30 - Math.floor((now - pState.startTime) / 1000));
-      gameHintEl.textContent = `Осталось ${leftSec}с`;
+      gameHintEl.textContent = `${leftSec}с`;
 
-      pState.enX += (pState.enTargetX - pState.enX) * 0.28;
+      pState.enX += (pState.enTargetX - pState.enX) * 0.25;
 
-      if (isHost) {
-        if (now - pState.lastSpawn > 580) {
-          pState.lastSpawn = now;
-          const pool = [
-            { icon: "🍩", pts: 1, sfx: "eat", color: "#ff85c0" },
-            { icon: "🍕", pts: 1, sfx: "eat", color: "#ffd43b" },
-            { icon: "🍰", pts: 2, sfx: "eat", color: "#c084fc" },
-            { icon: "⭐", pts: 3, sfx: "star", color: "#ffe066" },
-            { icon: "🌶️", pts: -2, sfx: "chili", color: "#ff4757" }
-          ];
-          const pick = pool.at(Math.floor(Math.random() * pool.length));
-          pState.items.push({
-            x: 24 + Math.random() * 272,
-            y: -15,
-            vy: 2.8 + Math.random() * 1.9,
-            icon: pick.icon,
-            pts: pick.pts,
-            sfx: pick.sfx,
-            color: pick.color
-          });
+      if (isHost && now - pState.lastSpawn > 650 && leftSec > 1) {
+        pState.lastSpawn = now;
+        const pool = [
+          { icon: "🍩", pts: 1, sfx: "eat", color: "#ff85c0", glow: "rgba(255,112,184,0.35)" },
+          { icon: "🍕", pts: 1, sfx: "eat", color: "#ffd43b", glow: "rgba(255,212,59,0.35)" },
+          { icon: "🍰", pts: 2, sfx: "eat", color: "#c084fc", glow: "rgba(192,132,252,0.35)" },
+          { icon: "⭐", pts: 3, sfx: "star", color: "#ffe066", glow: "rgba(255,224,102,0.45)" },
+          { icon: "🌶️", pts: -2, sfx: "chili", color: "#ff4757", glow: "rgba(255,71,87,0.4)" }
+        ];
+        const pick = pool.at(Math.floor(Math.random() * pool.length));
+        const item = {
+          id: pState.nextId++,
+          x: Math.round(28 + Math.random() * 264),
+          y: -18,
+          vy: Number((2.7 + Math.random() * 1.4).toFixed(2)),
+          icon: pick.icon,
+          pts: pick.pts,
+          sfx: pick.sfx,
+          color: pick.color,
+          glow: pick.glow
+        };
+        pState.items.push(item);
+        sendData({ type: "pSpawn", item });
+      }
+
+      for (let i = pState.items.length - 1; i >= 0; i--) {
+        const it = pState.items[i];
+        it.y += it.vy;
+
+        if (it.y > 322 && it.y < 368 && Math.abs(it.x - pState.myX) < 36) {
+          pState.sMe = Math.max(0, pState.sMe + it.pts);
+          playSFX(it.sfx);
+          if (it.pts < 0) pState.myDizzyUntil = now + 1000;
+          addScorePopup(pState.myX, 315, (it.pts > 0 ? "+" : "") + it.pts, it.color);
+          roundScoreEl.textContent = `${pState.sMe} : ${pState.sEn}`;
+          sendData({ type: "pCatch", id: it.id, score: pState.sMe, pts: it.pts, x: Math.round(pState.myX) });
+          pState.items.splice(i, 1);
+          continue;
         }
+        if (it.y > 415) pState.items.splice(i, 1);
+      }
 
-        for (let i = pState.items.length - 1; i >= 0; i--) {
-          const it = pState.items[i];
-          it.y += it.vy;
-          if (it.y > 325 && it.y < 368) {
-            if (Math.abs(it.x - pState.myX) < 35) {
-              pState.sMe = Math.max(0, pState.sMe + it.pts);
-              playSFX(it.sfx);
-              if (it.pts < 0) pState.myDizzyUntil = now + 1100;
-              addScorePopup(pState.myX, 315, (it.pts > 0 ? "+" : "") + it.pts, it.color);
-              pState.items.splice(i, 1);
-              continue;
-            }
-            if (Math.abs(it.x - pState.enX) < 35) {
-              pState.sEn = Math.max(0, pState.sEn + it.pts);
-              if (it.pts < 0) pState.enDizzyUntil = now + 1100;
-              addScorePopup(pState.enX, 315, (it.pts > 0 ? "+" : "") + it.pts, it.color);
-              pState.items.splice(i, 1);
-              continue;
-            }
-          }
-          if (it.y > 415) pState.items.splice(i, 1);
-        }
-
-        roundScoreEl.textContent = `${pState.sMe} : ${pState.sEn}`;
-
-        if (now - pState.lastSyncSend > 55) {
-          pState.lastSyncSend = now;
-          sendData({
-            type: "pSync",
-            items: pState.items.map(it => ({ x: Math.round(it.x), y: Math.round(it.y), vy: it.vy, icon: it.icon })),
-            sMe: pState.sEn,
-            sEn: pState.sMe,
-            myDizzy: pState.enDizzyUntil > now,
-            enDizzy: pState.myDizzyUntil > now,
-            leftSec
-          });
-        }
-
-        if (leftSec <= 0) {
-          if (pState.sMe === pState.sEn) finishRound(null, "Дружеская ничья! 🍩");
-          else finishRound(pState.sMe > pState.sEn, pState.sMe > pState.sEn ? "Пушин объелся! 🏆" : "Соперник поймал больше!");
-          return;
-        }
-      } else {
-        pState.items.forEach(it => { it.y += (it.vy || 3.2); });
+      if (leftSec <= 0) {
+        if (pState.sMe === pState.sEn) finishRound(null, "Дружеская ничья! 🍩");
+        else finishRound(pState.sMe > pState.sEn, pState.sMe > pState.sEn ? "Пушин объелся! 🏆" : "Соперник поймал больше!");
+        return;
       }
 
       ctx.clearRect(0, 0, 320, 400);
       ctx.fillStyle = "rgba(255,255,255,0.06)";
       ctx.fillRect(0, 378, 320, 22);
 
-      ctx.font = "24px sans-serif";
+      ctx.font = "32px sans-serif";
       ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
       pState.items.forEach(it => {
-        ctx.fillText(it.icon, it.x, it.y);
+        ctx.fillStyle = it.glow || "rgba(255, 255, 255, 0.22)";
+        ctx.beginPath();
+        ctx.arc(it.x, it.y, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillText(it.icon, it.x, it.y + 2);
       });
+      ctx.textBaseline = "alphabetic";
 
-      ctx.globalAlpha = 0.76;
+      ctx.globalAlpha = 0.78;
       drawPusheenCat(ctx, pState.enX, 346, "#ffd43b", enemyNick, pState.enDizzyUntil > now);
       ctx.globalAlpha = 1;
       drawPusheenCat(ctx, pState.myX, 346, "#b8aeb3", myNick, pState.myDizzyUntil > now);
@@ -1380,13 +1481,10 @@
         const pop = pState.popups[i];
         pop.y -= 1.1;
         pop.life -= 0.03;
-        if (pop.life <= 0) {
-          pState.popups.splice(i, 1);
-          continue;
-        }
+        if (pop.life <= 0) { pState.popups.splice(i, 1); continue; }
         ctx.globalAlpha = pop.life;
         ctx.fillStyle = pop.color;
-        ctx.font = "bold 16px sans-serif";
+        ctx.font = "bold 17px sans-serif";
         ctx.fillText(pop.text, pop.x, pop.y);
         ctx.globalAlpha = 1;
       }
@@ -1395,21 +1493,148 @@
     }
     loop();
   }
-  // === ИГРА 2: НЕОНОВЫЙ АЭРОХОККЕЙ СО СЛЕДОМ И ИНТЕРПОЛЯЦИЕЙ ===
+  // === ИГРА 2: НЕОНОВЫЙ ПИНГ-ПОНГ 1 НА 1 ===
+  function initPong() {
+    gameHintEl.textContent = "До 5 очков";
+    roundScoreEl.textContent = "0 : 0";
+    gameContainer.innerHTML = `<canvas id="pongCanvas" class="game-canvas" width="320" height="400"></canvas>`;
+    const canvas = document.getElementById("pongCanvas");
+    const ctx = canvas.getContext("2d");
+
+    pongState = {
+      myX: 160,
+      enX: 160,
+      enTargetX: 160,
+      bx: 160, by: 200,
+      bTargetX: 160, bTargetY: 200,
+      vx: isHost ? 3.2 : 0,
+      vy: isHost ? 4.0 : 0,
+      sMe: 0, sEn: 0,
+      lastNetSend: 0,
+      lastSyncSend: 0
+    };
+
+    function moveRacket(clientX) {
+      const rect = canvas.getBoundingClientRect();
+      const nx = Math.max(42, Math.min(278, (clientX - rect.left) * (320 / rect.width)));
+      pongState.myX = nx;
+      const now = Date.now();
+      if (now - pongState.lastNetSend > 45) {
+        pongState.lastNetSend = now;
+        sendData({ type: "pongMove", x: Math.round(320 - nx) });
+      }
+    }
+
+    canvas.addEventListener("touchmove", e => {
+      if (e.touches.length > 0) moveRacket(e.touches.item(0).clientX);
+    }, { passive: true });
+    canvas.addEventListener("mousemove", e => {
+      if (e.buttons === 1) moveRacket(e.clientX);
+    });
+
+    function resetBall(dir) {
+      pongState.bx = 160; pongState.by = 200;
+      pongState.bTargetX = 160; pongState.bTargetY = 200;
+      pongState.vx = (Math.random() * 4 - 2);
+      pongState.vy = 4.0 * dir;
+    }
+
+    function loop() {
+      if (currentGame !== "pong") return;
+      const now = Date.now();
+
+      pongState.enX += (pongState.enTargetX - pongState.enX) * 0.28;
+
+      if (isHost) {
+        pongState.bx += pongState.vx;
+        pongState.by += pongState.vy;
+
+        if (pongState.bx < 10 || pongState.bx > 310) {
+          pongState.vx *= -1;
+          playSFX("hit");
+        }
+
+        if (pongState.by > 358 && pongState.by < 376 && Math.abs(pongState.bx - pongState.myX) < 46) {
+          pongState.vy = -Math.min(Math.abs(pongState.vy) + 0.25, 8.2);
+          pongState.vx += (pongState.bx - pongState.myX) * 0.08;
+          pongState.by = 357;
+          playSFX("hit");
+        }
+        if (pongState.by < 42 && pongState.by > 24 && Math.abs(pongState.bx - pongState.enX) < 46) {
+          pongState.vy = Math.min(Math.abs(pongState.vy) + 0.25, 8.2);
+          pongState.vx += (pongState.bx - pongState.enX) * 0.08;
+          pongState.by = 43;
+          playSFX("hit");
+        }
+
+        if (pongState.by < 0) {
+          pongState.sMe++;
+          playSFX("goal");
+          resetBall(1);
+        } else if (pongState.by > 400) {
+          pongState.sEn++;
+          playSFX("goal");
+          resetBall(-1);
+        }
+
+        roundScoreEl.textContent = `${pongState.sMe} : ${pongState.sEn}`;
+
+        if (now - pongState.lastSyncSend > 45) {
+          pongState.lastSyncSend = now;
+          sendData({
+            type: "pongSync",
+            bx: Math.round(320 - pongState.bx),
+            by: Math.round(400 - pongState.by),
+            sMe: pongState.sEn,
+            sEn: pongState.sMe
+          });
+        }
+
+        if (pongState.sMe >= 5 || pongState.sEn >= 5) {
+          finishRound(pongState.sMe >= 5);
+          return;
+        }
+      } else {
+        pongState.bx += (pongState.bTargetX - pongState.bx) * 0.35;
+        pongState.by += (pongState.bTargetY - pongState.by) * 0.35;
+      }
+
+      ctx.clearRect(0, 0, 320, 400);
+      ctx.strokeStyle = "rgba(255,255,255,0.1)";
+      ctx.setLineDash([6, 6]);
+      ctx.beginPath(); ctx.moveTo(0, 200); ctx.lineTo(320, 200); ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = "#ffd43b";
+      ctx.fillRect(pongState.enX - 40, 24, 80, 10);
+
+      ctx.fillStyle = "#ff70b8";
+      ctx.fillRect(pongState.myX - 40, 366, 80, 10);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(pongState.bx, pongState.by, 9, 0, Math.PI * 2);
+      ctx.fill();
+
+      gameLoopId = requestAnimationFrame(loop);
+    }
+    loop();
+  }
+
+  // === ИГРА 3: НЕОНОВЫЙ АЭРОХОККЕЙ ===
   function initHockey() {
     gameHintEl.textContent = "До 5 голов";
     roundScoreEl.textContent = "0 : 0";
-    gameContainer.innerHTML = `<canvas id="hockeyCanvas" class="game-canvas" width="320" height="410"></canvas>`;
+    gameContainer.innerHTML = `<canvas id="hockeyCanvas" class="game-canvas" width="320" height="400"></canvas>`;
     const canvas = document.getElementById("hockeyCanvas");
     const ctx = canvas.getContext("2d");
 
     hState = {
-      myX: 160, myY: 350,
-      enX: 160, enY: 60,
-      enTargetX: 160, enTargetY: 60,
-      px: 160, py: 205,
-      pTargetX: 160, pTargetY: 205,
-      trail: [],
+      myX: 160, myY: 345,
+      enX: 160, enY: 55,
+      enTargetX: 160, enTargetY: 55,
+      px: 160, py: 200,
+      pTargetX: 160, pTargetY: 200,
       vx: isHost ? 3.2 : 0, vy: isHost ? 4.1 : 0,
       sMe: 0, sEn: 0,
       lastNetSend: 0,
@@ -1418,17 +1643,15 @@
 
     function movePaddle(clientX, clientY) {
       const rect = canvas.getBoundingClientRect();
-      let nx = (clientX - rect.left) * (320 / rect.width);
-      let ny = (clientY - rect.top) * (410 / rect.height);
-      nx = Math.max(26, Math.min(294, nx));
-      ny = Math.max(229, Math.min(384, ny));
+      let nx = Math.max(26, Math.min(294, (clientX - rect.left) * (320 / rect.width)));
+      let ny = Math.max(224, Math.min(374, (clientY - rect.top) * (400 / rect.height)));
       hState.myX = nx;
       hState.myY = ny;
 
       const now = Date.now();
-      if (now - hState.lastNetSend > 35) {
+      if (now - hState.lastNetSend > 45) {
         hState.lastNetSend = now;
-        sendData({ type: "hPaddle", x: Math.round(320 - nx), y: Math.round(410 - ny) });
+        sendData({ type: "hPaddle", x: Math.round(320 - nx), y: Math.round(400 - ny) });
       }
     }
 
@@ -1440,11 +1663,8 @@
     });
 
     function resetPuck(dir) {
-      hState.px = 160;
-      hState.py = 205;
-      hState.pTargetX = 160;
-      hState.pTargetY = 205;
-      hState.trail = [];
+      hState.px = 160; hState.py = 200;
+      hState.pTargetX = 160; hState.pTargetY = 200;
       hState.vx = (Math.random() * 4 - 2);
       hState.vy = 4.2 * dir;
     }
@@ -1453,16 +1673,13 @@
       if (currentGame !== "hockey") return;
       const now = Date.now();
 
-      hState.enX += (hState.enTargetX - hState.enX) * 0.32;
-      hState.enY += (hState.enTargetY - hState.enY) * 0.32;
+      hState.enX += (hState.enTargetX - hState.enX) * 0.28;
+      hState.enY += (hState.enTargetY - hState.enY) * 0.28;
 
       if (isHost) {
         hState.px += hState.vx;
         hState.py += hState.vy;
-        if (hState.px < 16 || hState.px > 304) {
-          hState.vx *= -1;
-          playSFX("hit");
-        }
+        if (hState.px < 16 || hState.px > 304) { hState.vx *= -1; playSFX("hit"); }
 
         [{ x: hState.myX, y: hState.myY }, { x: hState.enX, y: hState.enY }].forEach(p => {
           const dx = hState.px - p.x;
@@ -1470,7 +1687,7 @@
           const dist = Math.hypot(dx, dy);
           if (dist < 38 && dist > 0) {
             const angle = Math.atan2(dy, dx);
-            const speed = Math.min(Math.hypot(hState.vx, hState.vy) + 0.35, 8.8);
+            const speed = Math.min(Math.hypot(hState.vx, hState.vy) + 0.35, 8.6);
             hState.vx = Math.cos(angle) * speed;
             hState.vy = Math.sin(angle) * speed;
             hState.px = p.x + Math.cos(angle) * 39;
@@ -1480,36 +1697,22 @@
         });
 
         if (hState.py < 12) {
-          if (hState.px > 100 && hState.px < 220) {
-            hState.sMe++;
-            playSFX("goal");
-            resetPuck(1);
-          } else {
-            hState.vy *= -1;
-            hState.py = 14;
-            playSFX("hit");
-          }
+          if (hState.px > 100 && hState.px < 220) { hState.sMe++; playSFX("goal"); resetPuck(1); }
+          else { hState.vy *= -1; hState.py = 14; playSFX("hit"); }
         }
-        if (hState.py > 398) {
-          if (hState.px > 100 && hState.px < 220) {
-            hState.sEn++;
-            playSFX("goal");
-            resetPuck(-1);
-          } else {
-            hState.vy *= -1;
-            hState.py = 396;
-            playSFX("hit");
-          }
+        if (hState.py > 388) {
+          if (hState.px > 100 && hState.px < 220) { hState.sEn++; playSFX("goal"); resetPuck(-1); }
+          else { hState.vy *= -1; hState.py = 386; playSFX("hit"); }
         }
 
         roundScoreEl.textContent = `${hState.sMe} : ${hState.sEn}`;
 
-        if (now - hState.lastSyncSend > 38) {
+        if (now - hState.lastSyncSend > 45) {
           hState.lastSyncSend = now;
           sendData({
             type: "hSync",
             px: Math.round(320 - hState.px),
-            py: Math.round(410 - hState.py),
+            py: Math.round(400 - hState.py),
             sMe: hState.sEn,
             sEn: hState.sMe
           });
@@ -1520,28 +1723,18 @@
           return;
         }
       } else {
-        hState.px += (hState.pTargetX - hState.px) * 0.42;
-        hState.py += (hState.pTargetY - hState.py) * 0.42;
+        hState.px += (hState.pTargetX - hState.px) * 0.35;
+        hState.py += (hState.pTargetY - hState.py) * 0.35;
       }
 
-      hState.trail.push({ x: hState.px, y: hState.py });
-      if (hState.trail.length > 8) hState.trail.shift();
-
-      ctx.clearRect(0, 0, 320, 410);
+      ctx.clearRect(0, 0, 320, 400);
       ctx.strokeStyle = "rgba(255,255,255,0.12)";
       ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0, 205); ctx.lineTo(320, 205); ctx.stroke();
-      ctx.beginPath(); ctx.arc(160, 205, 45, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, 200); ctx.lineTo(320, 200); ctx.stroke();
+      ctx.beginPath(); ctx.arc(160, 200, 45, 0, Math.PI * 2); ctx.stroke();
       ctx.fillStyle = "#ff70b8";
       ctx.fillRect(100, 0, 120, 5);
-      ctx.fillRect(100, 405, 120, 5);
-
-      hState.trail.forEach((pt, idx) => {
-        ctx.fillStyle = `rgba(255, 255, 255, ${(idx + 1) * 0.04})`;
-        ctx.beginPath();
-        ctx.arc(pt.x, pt.y, 12 * ((idx + 1) / 8), 0, Math.PI * 2);
-        ctx.fill();
-      });
+      ctx.fillRect(100, 395, 120, 5);
 
       ctx.fillStyle = "#ffd43b";
       ctx.beginPath(); ctx.arc(hState.enX, hState.enY, 22, 0, Math.PI * 2); ctx.fill();
@@ -1554,8 +1747,7 @@
     }
     loop();
   }
-
-  // === ИГРА 3: ДУЭЛЬ НА РЕАКЦИЮ С БОМБАМИ ===
+  // === ИГРА 4: ДУЭЛЬ НА РЕАКЦИЮ С БОМБАМИ ===
   function initReaction(initiator) {
     gameHintEl.textContent = "До 10! Осторожно 💣";
     roundScoreEl.textContent = "0 : 0";
@@ -1577,7 +1769,7 @@
     sendData({ type: "rSpawn", id: rState.targetId, x: tx, y: ty, icon });
 
     if (icon === "💣" && isHost) {
-      rState.bombTimer = setTimeout(spawnReactionTarget, 1300);
+      rState.bombTimer = setTimeout(spawnReactionTarget, 1250);
     }
   }
 
@@ -1603,14 +1795,14 @@
         playSFX("eat");
       }
       roundScoreEl.textContent = `${rState.sMe} : ${rState.sEn}`;
-      sendData({ type: "rHit", sEn: rState.sMe, bomb: isBomb });
+      sendData({ type: "rHit", sEn: rState.sMe });
       if (rState.sMe >= 10) finishRound(true);
-      else setTimeout(spawnReactionTarget, 320);
+      else setTimeout(spawnReactionTarget, 300);
     });
     arena.appendChild(orb);
   }
 
-  // === ИГРА 4: КАМЕНЬ, НОЖНИЦЫ, БУМАГА ===
+  // === ИГРА 5: КАМЕНЬ, НОЖНИЦЫ, БУМАГА ===
   function initRPS() {
     rpsState = { myPick: null, enPick: null, sMe: 0, sEn: 0 };
     roundScoreEl.textContent = "0 : 0";
@@ -1678,13 +1870,13 @@
         document.getElementById("rpsMeView").textContent = "❓";
         document.getElementById("rpsEnView").textContent = "❓";
         document.getElementById("rpsStatus").textContent = "Следующий раунд — выбирай!";
-      }, 1400);
+      }, 1300);
     }
   }
-  // === ИГРА 5: КРЕСТИКИ-НОЛИКИ ===
+  // === ИГРА 6: КРЕСТИКИ-НОЛИКИ ===
   function initTTT(initiator) {
     const myMark = initiator ? "X" : "O";
-    tttState = { board: Array(9).fill(""), myMark, myTurn: initiator };
+    tttState = { board: Array(9).fill(""), myMark, myTurn: initiator, over: false };
     roundScoreEl.textContent = `Ты: ${myMark}`;
     gameHintEl.textContent = tttState.myTurn ? "Твой ход!" : "Ход соперника...";
 
@@ -1695,7 +1887,7 @@
       cell.className = "ttt-cell";
       cell.dataset.idx = i;
       cell.addEventListener("click", () => {
-        if (!tttState.myTurn || tttState.board.at(i) !== "") return;
+        if (tttState.over || !tttState.myTurn || tttState.board[i] !== "") return;
         makeTTTMove(i, tttState.myMark, true);
       });
       grid.appendChild(cell);
@@ -1704,6 +1896,7 @@
   }
 
   function makeTTTMove(idx, mark, local) {
+    if (tttState.over) return;
     tttState.board[idx] = mark;
     playSFX("pop");
     const cell = gameContainer.querySelector(`.ttt-cell[data-idx="${idx}"]`);
@@ -1723,50 +1916,70 @@
   }
 
   function checkTTTWin() {
-    const wins = [, [3, 4, 5], [6, 7, 8],
+    const winLines = [, [3, 4, 5], [6, 7, 8],
 , [1, 4, 7], [2, 5, 8],
 , [2, 4, 6]
     ];
-    for (const [a, b, c] of wins) {
-      const v = tttState.board.at(a);
-      if (v && v === tttState.board.at(b) && v === tttState.board.at(c)) {
+    for (const [a, b, c] of winLines) {
+      const v = tttState.board[a];
+      if (v !== "" && v === tttState.board[b] && v === tttState.board[c]) {
+        tttState.over = true;
         tttState.myTurn = false;
+        [a, b, c].forEach(idx => {
+          const el = gameContainer.querySelector(`.ttt-cell[data-idx="${idx}"]`);
+          if (el) el.classList.add("win-cell");
+        });
         finishRound(v === tttState.myMark);
         return;
       }
     }
     if (!tttState.board.includes("")) {
+      tttState.over = true;
       finishRound(null, "Ничья! 🤝");
     }
   }
 
   // === ЦЕНТРАЛЬНЫЙ СЕТЕВОЙ ОБРАБОТЧИК ===
   function handleNetworkMessage(msg) {
-    if (msg.type === "chat") addChatLine(msg.author, msg.text);
+    if (msg.type === "chat") addChatLine(msg.author, msg.text, false);
     if (msg.type === "emote") { spawnFloatingEmote(msg.em); playSFX("pop"); }
     if (msg.type === "startGame") startGame(msg.game, false);
     if (msg.type === "backLobby") { stopCurrentGame(); showScreen("screenLobby"); }
 
-    // Плавный Пушин
     if (msg.type === "pMove" && pState) {
       pState.enTargetX = msg.x;
     }
-    if (msg.type === "pSync" && pState && !isHost) {
-      pState.items = msg.items;
-      if (msg.sMe > pState.sMe) playSFX("eat");
-      pState.sMe = msg.sMe;
-      pState.sEn = msg.sEn;
-      if (msg.myDizzy) pState.myDizzyUntil = Date.now() + 800;
-      if (msg.enDizzy) pState.enDizzyUntil = Date.now() + 800;
+    if (msg.type === "pSpawn" && pState && !isHost) {
+      pState.items.push(msg.item);
+    }
+    if (msg.type === "pCatch" && pState) {
+      pState.sEn = msg.score;
+      if (msg.pts < 0) pState.enDizzyUntil = Date.now() + 1000;
+      pState.popups.push({
+        x: msg.x,
+        y: 315,
+        text: (msg.pts > 0 ? "+" : "") + msg.pts,
+        color: msg.pts > 0 ? "#ffd43b" : "#ff4757",
+        life: 1.0
+      });
       roundScoreEl.textContent = `${pState.sMe} : ${pState.sEn}`;
-      gameHintEl.textContent = `Осталось ${msg.leftSec}с`;
-      if (msg.leftSec <= 0) {
-        if (pState.sMe === pState.sEn) finishRound(null, "Дружеская ничья! 🍩");
-        else finishRound(pState.sMe > pState.sEn, pState.sMe > pState.sEn ? "Пушин объелся! 🏆" : "Соперник поймал больше!");
-      }
+      const idx = pState.items.findIndex(it => it.id === msg.id);
+      if (idx !== -1) pState.items.splice(idx, 1);
     }
 
-    // Плавный Аэрохоккей
+    if (msg.type === "pongMove" && pongState) {
+      pongState.enTargetX = msg.x;
+    }
+    if (msg.type === "pongSync" && pongState && !isHost) {
+      pongState.bTargetX = msg.bx;
+      pongState.bTargetY = msg.by;
+      if (msg.sMe !== pongState.sMe || msg.sEn !== pongState.sEn) playSFX("goal");
+      pongState.sMe = msg.sMe;
+      pongState.sEn = msg.sEn;
+      roundScoreEl.textContent = `${pongState.sMe} : ${pongState.sEn}`;
+      if (pongState.sMe >= 5 || pongState.sEn >= 5) finishRound(pongState.sMe >= 5);
+    }
+
     if (msg.type === "hPaddle" && hState) {
       hState.enTargetX = msg.x;
       hState.enTargetY = msg.y;
@@ -1781,7 +1994,6 @@
       if (hState.sMe >= 5 || hState.sEn >= 5) finishRound(hState.sMe >= 5);
     }
 
-    // Дуэль на реакцию с бомбами
     if (msg.type === "rSpawn" && rState) {
       rState.targetId = msg.id;
       renderOrb(msg.id, msg.x, msg.y, msg.icon);
@@ -1795,13 +2007,11 @@
       if (rState.sEn >= 10) finishRound(false);
     }
 
-    // Камень, Ножницы, Бумага
     if (msg.type === "rpsPick" && rpsState) {
       rpsState.enPick = msg.pick;
       resolveRPSRound();
     }
 
-    // Крестики-нолики
     if (msg.type === "tttMove" && tttState) {
       makeTTTMove(msg.idx, msg.mark, false);
     }
