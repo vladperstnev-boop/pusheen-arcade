@@ -358,7 +358,6 @@
       flex-shrink: 0;
     }
 
-    /* Мини-чат и реакции */
     .chat-bar {
       display: flex;
       gap: 6px;
@@ -485,7 +484,6 @@
       to   { transform: scale(1); }
     }
 
-    /* Камень, Ножницы, Бумага */
     .rps-box {
       padding: 16px 8px;
       background: #0b0b12;
@@ -516,7 +514,6 @@
     }
     .rps-btn:active { transform: scale(0.92); }
 
-    /* Крестики-нолики */
     .ttt-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -554,13 +551,16 @@
     </div>
   </div>
 
-  <!-- ЭКРАН 1: ВХОД, НИК И СВОЙ АВАТАР -->
+  <!-- ЭКРАН 1: ПРОФИЛЬ, СОХРАНЕНИЕ АККАУНТА И КОМНАТА -->
   <div class="screen active" id="screenConnect">
     <h1>Играем вдвоём</h1>
-    <div class="sub">Поставь свой ник, выбери или загрузи аватар</div>
+    <div class="sub" id="profileStatsLine">Профиль • Побед: 0 • Игр: 0</div>
 
     <div class="input-group">
-      <label class="input-label">Твой ник и аватар</label>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <label class="input-label" style="margin-bottom:0;">Твой ник и аватар</label>
+        <button id="exportAccBtn" style="background:none;border:none;color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;">💾 Код акка</button>
+      </div>
       <input type="text" id="nickInput" maxlength="12" placeholder="Введи ник...">
       <div class="avatars-row" id="avatarPicker">
         <div class="ava active" data-ava="🐱">🐱</div>
@@ -568,7 +568,7 @@
         <div class="ava" data-ava="🐰">🐰</div>
         <div class="ava" data-ava="⚡">⚡</div>
         <div class="ava" id="customAvaPreview" style="display:none;"></div>
-        <button class="upload-ava-btn" id="uploadAvaBtn">📷 Своё фото</button>
+        <button class="upload-ava-btn" id="uploadAvaBtn">📷 Фото</button>
         <input type="file" id="avaFileInput" accept="image/*" style="display:none;">
       </div>
     </div>
@@ -698,19 +698,26 @@
     });
   });
 
-  // === СВОЙ АВАТАР (ЗАГРУЗКА И СЖАТИЕ ФОТО ЧЕРЕЗ CANVAS) ===
   const nickInput = document.getElementById("nickInput");
   const avatarPicker = document.getElementById("avatarPicker");
   const avaFileInput = document.getElementById("avaFileInput");
   const customAvaPreview = document.getElementById("customAvaPreview");
 
-  let myNick = localStorage.getItem("duo_nick") || "";
-  let myAva = localStorage.getItem("duo_ava") || "🐱";
+  let accData = JSON.parse(localStorage.getItem("pusheen_acc_v2") || "null") || {
+    nick: localStorage.getItem("duo_nick") || "",
+    ava: localStorage.getItem("duo_ava") || "🐱",
+    wins: 0,
+    games: 0
+  };
+
+  let myNick = accData.nick;
+  let myAva = accData.ava;
   nickInput.value = myNick;
 
   function applySelectedAvatar(val) {
     myAva = val;
-    localStorage.setItem("duo_ava", val);
+    accData.ava = val;
+    localStorage.setItem("pusheen_acc_v2", JSON.stringify(accData));
     avatarPicker.querySelectorAll(".ava").forEach(a => a.classList.remove("active"));
 
     if (val.startsWith("data:image")) {
@@ -724,6 +731,44 @@
   }
 
   applySelectedAvatar(myAva);
+
+  function saveAccount() {
+    accData.nick = nickInput.value.trim() || "Игрок";
+    accData.ava = myAva;
+    myNick = accData.nick;
+    localStorage.setItem("pusheen_acc_v2", JSON.stringify(accData));
+    document.getElementById("profileStatsLine").textContent =
+      `Профиль: ${accData.nick} • Побед: ${accData.wins} • Игр: ${accData.games}`;
+  }
+  saveAccount();
+
+  document.getElementById("exportAccBtn").addEventListener("click", () => {
+    saveAccount();
+    const saveCode = btoa(unescape(encodeURIComponent(JSON.stringify({
+      nick: accData.nick,
+      wins: accData.wins,
+      games: accData.games
+    }))));
+    const input = prompt(
+      "Твой код сохранения (скопируй его) или вставь чужой код, чтобы загрузить аккаунт:",
+      saveCode
+    );
+    if (input && input !== saveCode) {
+      try {
+        const parsed = JSON.parse(decodeURIComponent(escape(atob(input.trim()))));
+        if (parsed.nick) {
+          accData.nick = parsed.nick;
+          accData.wins = Number(parsed.wins) || 0;
+          accData.games = Number(parsed.games) || 0;
+          nickInput.value = accData.nick;
+          saveAccount();
+          alert("Аккаунт успешно загружен!");
+        }
+      } catch (e) {
+        alert("Неверный код аккаунта.");
+      }
+    }
+  });
 
   avatarPicker.querySelectorAll(".ava[data-ava]").forEach(el => {
     el.addEventListener("click", () => {
@@ -776,7 +821,7 @@
     document.getElementById(id).classList.add("active");
   }
 
-  // === P2P-КОМНАТЫ И ЧАТ ===
+  // === НАДЁЖНЫЕ P2P-КОМНАТЫ И ЧАТ ===
   let peer = null;
   let conn = null;
   let isHost = false;
@@ -787,13 +832,20 @@
   let winsEnemy = 0;
   let currentGame = null;
   let gameLoopId = null;
+  let connectWatchdog = null;
 
   const statusText = document.getElementById("statusText");
 
-  function saveProfile() {
-    myNick = nickInput.value.trim() || "Игрок";
-    localStorage.setItem("duo_nick", myNick);
-  }
+  const peerConfig = {
+    debug: 0,
+    config: {
+      iceServers: [
+        { urls: "stun:://google.com" },
+        { urls: "stun:://google.com" },
+        { urls: "stun:://google.com" }
+      ]
+    }
+  };
 
   function updateHeader() {
     document.getElementById("p1Badge").innerHTML = `${renderAvatarHtml(myAva)} <span>${myNick}</span>`;
@@ -810,6 +862,7 @@
   function setupConnection(connection) {
     conn = connection;
     conn.on("open", () => {
+      if (connectWatchdog) clearTimeout(connectWatchdog);
       statusText.textContent = "Соединение установлено!";
       sendData({ type: "hello", nick: myNick, ava: myAva });
       updateHeader();
@@ -824,39 +877,71 @@
   }
 
   document.getElementById("createRoomBtn").addEventListener("click", () => {
-    saveProfile();
+    saveAccount();
+    if (peer) { try { peer.destroy(); } catch (e) {} }
+
     isHost = true;
     roomCode = Math.floor(1000 + Math.random() * 9000).toString();
-    statusText.textContent = "Создаём комнату...";
+    statusText.textContent = "Подключаем сервер комнаты...";
 
-    peer = new Peer("pusheenduo-" + roomCode);
+    if (connectWatchdog) clearTimeout(connectWatchdog);
+    connectWatchdog = setTimeout(() => {
+      if (!peer || !peer.open) {
+        statusText.textContent = "Сервер занят, пробую резервный канал...";
+        if (peer) try { peer.destroy(); } catch (e) {}
+        peer = new Peer("pduo-" + roomCode, peerConfig);
+        peer.on("open", () => {
+          document.getElementById("displayCode").textContent = roomCode;
+          statusText.textContent = "";
+          updateHeader();
+          showScreen("screenLobby");
+        });
+        peer.on("connection", setupConnection);
+      }
+    }, 5500);
+
+    peer = new Peer("pduo-" + roomCode, peerConfig);
+
     peer.on("open", () => {
+      clearTimeout(connectWatchdog);
       document.getElementById("displayCode").textContent = roomCode;
+      statusText.textContent = "";
       updateHeader();
       showScreen("screenLobby");
     });
+
     peer.on("connection", setupConnection);
-    peer.on("error", () => {
-      statusText.textContent = "Ошибка сети, нажмите ещё раз.";
+
+    peer.on("error", (err) => {
+      clearTimeout(connectWatchdog);
+      if (err.type === "unavailable-id") {
+        roomCode = Math.floor(1000 + Math.random() * 9000).toString();
+        document.getElementById("createRoomBtn").click();
+      } else {
+        statusText.textContent = "Ошибка сети (" + err.type + "). Проверь интернет и нажми снова.";
+      }
     });
   });
 
   function joinByCode(code) {
-    saveProfile();
+    saveAccount();
     if (!code || code.length !== 4) {
       statusText.textContent = "Введите 4-значный код комнаты!";
       return;
     }
+    if (peer) { try { peer.destroy(); } catch (e) {} }
+
     isHost = false;
     roomCode = code;
-    statusText.textContent = "Подключаемся к комнате " + code + "...";
+    statusText.textContent = "Ищем комнату " + code + "...";
 
-    peer = new Peer();
+    peer = new Peer(peerConfig);
     peer.on("open", () => {
-      setupConnection(peer.connect("pusheenduo-" + code));
+      const connection = peer.connect("pduo-" + code, { reliable: true });
+      setupConnection(connection);
     });
     peer.on("error", () => {
-      statusText.textContent = "Комната не найдена.";
+      statusText.textContent = "Комната " + code + " не найдена или ещё не создана.";
     });
   }
 
@@ -937,8 +1022,10 @@
   });
 
   function finishRound(iWon, customMsg) {
+    accData.games++;
     if (iWon === true) {
       winsMe++;
+      accData.wins++;
       gameHintEl.textContent = customMsg || "Победа! 🏆";
       for (let i = 0; i < 12; i++) {
         setTimeout(() => spawnFloatingEmote(["🎉", "🐱", "✨", "🍩"].at(i % 4)), i * 80);
@@ -949,6 +1036,7 @@
     } else {
       gameHintEl.textContent = customMsg || "Ничья!";
     }
+    saveAccount();
     updateHeader();
     setTimeout(() => {
       stopCurrentGame();
@@ -983,21 +1071,17 @@
   function drawPusheenCat(ctx, x, y, colorTint, label) {
     ctx.save();
     ctx.translate(x, y);
-    // Тело пухлого котика Пушина
     ctx.fillStyle = colorTint;
     ctx.beginPath();
     ctx.ellipse(0, 4, 28, 21, 0, 0, Math.PI * 2);
     ctx.fill();
-    // Ушки
     ctx.beginPath();
     ctx.moveTo(-20, -10); ctx.lineTo(-14, -24); ctx.lineTo(-4, -14);
     ctx.moveTo(20, -10); ctx.lineTo(14, -24); ctx.lineTo(4, -14);
     ctx.fill();
-    // Полоски на спине
     ctx.fillStyle = "#5c5358";
     ctx.fillRect(-6, -15, 12, 3);
     ctx.fillRect(-4, -10, 8, 3);
-    // Глазки и носик-ротик W
     ctx.fillStyle = "#1f1b1d";
     ctx.beginPath();
     ctx.arc(-10, -2, 2.5, 0, Math.PI * 2);
@@ -1009,13 +1093,11 @@
     ctx.arc(-2.5, 1, 2.5, 0, Math.PI);
     ctx.arc(2.5, 1, 2.5, 0, Math.PI);
     ctx.stroke();
-    // Розовые щёчки
     ctx.fillStyle = "rgba(255, 112, 184, 0.65)";
     ctx.beginPath();
     ctx.arc(-16, 3, 3.5, 0, Math.PI * 2);
     ctx.arc(16, 3, 3.5, 0, Math.PI * 2);
     ctx.fill();
-    // Подпись игрока
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 10px sans-serif";
     ctx.textAlign = "center";
@@ -1075,7 +1157,6 @@
         for (let i = pState.items.length - 1; i >= 0; i--) {
           const it = pState.items[i];
           it.y += it.vy;
-          // Проверка поимки Пушином хоста или гостя
           if (it.y > 325 && it.y < 368) {
             if (Math.abs(it.x - pState.myX) < 34) {
               pState.sMe++;
@@ -1108,18 +1189,15 @@
       }
 
       ctx.clearRect(0, 0, 320, 400);
-      // Полочка снизу
       ctx.fillStyle = "rgba(255,255,255,0.06)";
       ctx.fillRect(0, 378, 320, 22);
 
-      // Падающие вкусняшки
       ctx.font = "24px sans-serif";
       ctx.textAlign = "center";
       pState.items.forEach(it => {
         ctx.fillText(it.icon, it.x, it.y);
       });
 
-      // Рисуем двух Пушинов (соперника чуть полупрозрачнее, своего ярко)
       ctx.globalAlpha = 0.72;
       drawPusheenCat(ctx, pState.enX, 346, "#ffd43b", enemyNick);
       ctx.globalAlpha = 1;
@@ -1386,10 +1464,7 @@
   }
 
   function checkTTTWin() {
-    const wins = [, [3, 4, 5], [6, 7, 8],
-, [1, 4, 7], [2, 5, 8],
-, [2, 4, 6]
-    ];
+    const wins = [,,,,,,,];
     for (const [a, b, c] of wins) {
       const v = tttState.board.at(a);
       if (v && v === tttState.board.at(b) && v === tttState.board.at(c)) {
